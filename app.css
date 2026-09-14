@@ -948,3 +948,11 @@ footer{ display:none !important; }
   #planBtns button{ width:108px; min-height:104px; flex:0 0 auto; }
   .lg-plans{ padding-right:10px; }
 }
+
+/* v12.1：地图模块与正文同宽同轴，且在窄屏不外扩 */
+.map-module{ width:calc(100% - 2 * max(24px, 4vw)); }
+@media (max-width:680px){ .map-module{ width:calc(100% - 32px); } }
+.offp-col li{ position:relative; padding-left:20px; }
+.offp-col li:before{ content:""; position:absolute; left:8px; top:14px; width:6px; height:1.5px;
+  background:var(--teal,#2E7F6E); border-radius:2px; }
+.offp-col li b,.offp-col li span{ display:none; }

@@ -12,7 +12,7 @@
   };
   const WORLD = [[47.2, 85.6], [49.6, 89.2]];
   let map = null, layers = { base: null, lines: null, pins: null }, tileOk = null, ready = false;
-  let state = { day: 'all', scope: 'core', focus: null, plan: 'main' };
+  let state = { day: 'all', scope: 'full', focus: null, plan: 'main' };
 
   const place = id => TRIP.places.filter(x => x.id === id)[0];
   const track = id => (window.TRACKS ? TRACKS.tracks.filter(t => t.id === id)[0] : null);
@@ -70,7 +70,8 @@
     layers.pins.clearLayers();
     /* 真实路网：OSM 路由出的腿按交通方式上色（白衬线＋彩主线）；
        没有公开路网的接驳段画细点线并标"接驳示意"，绝不把直线当道路 */
-    const drawLegs = c.planLegs || GeoMap.legsFor(state.day === 'all' ? null : state.day, state.scope);
+    const drawLegs = c.planLegs || (state.day === 'all' ? GeoMap.legsFor(null, state.scope)
+      : GeoMap.dayLegs(state.day, state.scope));
     const HIDE = window.HIDE || {};
     drawLegs.forEach(l => {
       if (!l.points || l.points.length < 2) return;
@@ -223,7 +224,7 @@
     try {
       map = L.map(host, { zoomControl: false, attributionControl: false, minZoom: 7, maxZoom: 14,
                           maxBounds: WORLD, maxBoundsViscosity: .9, zoomSnap: .5,
-                          preferCanvas: false }).fitBounds(BOUNDS.core, { padding: [30, 30] });
+                          preferCanvas: false }).fitBounds(BOUNDS.full, { padding: [30, 30] });
       layers.base = L.tileLayer(
         'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}',
         { minZoom: 7, maxZoom: 14, bounds: WORLD, noWrap: true, opacity: .95 }).addTo(map);

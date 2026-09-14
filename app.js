@@ -350,38 +350,35 @@
     if (!thumbs || !panel) return;
     thumbs.innerHTML = G.map((g, i) => '<button class="off-thumb' + (i === 0 ? ' active' : '') + '" data-off="' + g.id + '">'
       + '<img src="' + esc(g.file) + '" alt="' + esc(g.name) + '"><span>' + esc(g.name) + '</span></button>').join('');
-    const group = (lines) => {
+    /* 只展示已提炼的分栏要点；数据里没有 points 才退回原文行 */
+    const colsOf = g => {
+      if (g.points && g.points.length) return g.points.map(x => [x.h, x.items || []]);
       const g1 = [], g2 = [], g3 = [];
-      (lines || []).forEach(l => {
+      (g.facility_lines || []).forEach(l => {
         const t = String(l);
         if (/换乘|回枢|班车|区间车/.test(t)) g1.push(t);
         else if (/寄存|行李|转运/.test(t)) g2.push(t);
         else g3.push(t);
       });
-      return [['换乘与班车', g1], ['行李寄存', g2], ['吃住与充电', g3]];
+      return [['换乘与班车', g1], ['行李与寄存', g2], ['现场要点', g3]];
     };
-    const short = t => { const x = String(t).split('→')[0].replace(/^作者"|"$/g, '');
-      return x.length > 26 ? x.slice(0, 26) + '…' : x; };
     const show = id => {
       const g = G.filter(x => x.id === id)[0];
       if (!g) return;
       $$('.off-thumb').forEach(b => b.classList.toggle('active', b.dataset.off === id));
       const p = placeById(g.place);
-      const groups = group(g.facility_lines);
       panel.innerHTML = '<div class="offp-head"><h3>' + esc(g.name) + '</h3>'
         + '<div class="offp-acts"><button class="btn-line small" data-guide="' + g.id + '">放大官方全图</button>'
         + (p ? '<a class="mini-link" href="place.html?id=' + p.id + '">地点页 →</a>' : '') + '</div></div>'
-        + '<p class="offp-key">' + esc(g.official_vs_us || g.use) + '</p>'
-        + '<div class="offp-cols">' + groups.map(gr =>
-            '<div class="offp-col"><p class="offp-h">' + gr[0] + '</p><ul>'
-            + (gr[1].slice(0, 3).map(t => '<li title="' + esc(t) + '"><b>' + esc(short(t))
-                + '</b><span>' + esc(t.length > 26 ? t.slice(26, 96) : '') + '</span></li>').join('')
-               || '<li><b>—</b><span></span></li>')
+        + '<p class="offp-key">' + esc(g.headline || g.official_vs_us || g.use) + '</p>'
+        + '<div class="offp-cols">' + colsOf(g).map(gr =>
+            '<div class="offp-col"><p class="offp-h">' + esc(gr[0]) + '</p><ul>'
+            + gr[1].slice(0, 4).map(t => '<li>' + esc(t) + '</li>').join('')
             + '</ul></div>').join('') + '</div>'
         + '<div class="offp-adopt"><p class="offp-h">我们这次采用</p><div class="chip-row">'
-        + (g.adopted || []).slice(0, 4).map(t => '<span class="chip">' + esc(short(t)) + '</span>').join('') + '</div></div>';
+        + (g.adopted || []).slice(0, 4).map(t => '<span class="chip">' + esc(t) + '</span>').join('') + '</div></div>';
       panel.querySelectorAll('[data-guide]').forEach(b => b.addEventListener('click',
-        () => Guide.open(g.file, g.name, g.facility_lines)));
+        () => Guide.open(g.file, g.name, (g.points || []).reduce((a, x) => a.concat(x.items || []), []))));
     };
     let timer = null;
     thumbs.querySelectorAll('[data-off]').forEach(b => b.addEventListener('click', () => {
