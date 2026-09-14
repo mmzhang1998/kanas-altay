@@ -111,6 +111,134 @@ function rowsHTML(rows, cols, cls) {
       + esc(cleanText(c)) + '</td>').join('') + '</tr>').join('')
     + '</tbody></table></div>';
 }
+/* ─ 设施与服务：先给结论，原始记录折叠在下面 ─────────────────── */
+const FAC_TOKENS = ['厕所', '卫生间', '洗手间', '热水', '电源', '充电', '加油', '停车', '信号', '网络',
+  '补给', '餐饮', '吃饭', '商店', '门票', '区间车', '行李', '寄存', '住宿', '露营', '边防证'];
+const FAC_LONG = { lodging: '住哪', camp: '露营', supply: '吃住与补给', luggage: '行李寄存',
+  ticket: '门票与区间车', food: '吃饭' };
+function stripParen(s) { return String(s || '').replace(/[（(][^（）()]{0,120}[）)]/g, ''); }
+function firstClause(t) {
+  let s = stripParen(cleanText(t));
+  s = s.split(/——|—{1,2}|--/)[0];
+  s = s.split(/[①②③④⑤⑥⑦⑧⑨⑩]/)[0];
+  return s.replace(/\s*[：:]\s*$/, '').trim();
+}
+function verdictOf(v) {
+  let s = stripParen(String(v || '')).split(/——|—{1,2}/)[0];
+  s = s.split(/[，。；、：:＋+→>①②③④⑤⑥⑦⑨⑩]/)[0].replace(/^[\s：:\-]+/, '').trim();
+  s = s.replace(/^(作者|亲测|实测|楼主)(置顶|记录|口径)?\s*/, '').trim();
+  if (!s) return '未核实';
+  if (/^[A-F]$/.test(s)) return '有 · 口径不一';
+  if (/无记录|无证据|无素材|无条目|未知|未证实|待核|不明|^无$/.test(s)) return '未核实';
+  if (s.length <= 2 && !/^(有|无|是|否|免费)/.test(s)) return '见原始记录';
+  if (s.length > 10) s = s.slice(0, 9) + '…';
+  return s;
+}
+function facChips(raw) {
+  const t = cleanText(raw);
+  const out = [];
+  FAC_TOKENS.forEach(function (k) {
+    if (out.some(o => o[0] === k)) return;
+    const m = new RegExp(k + '\\s*[：:]\\s*([^。；①②③④⑤⑥⑦⑧⑨⑩]{1,40})').exec(t);
+    if (!m) return;
+    out.push([k, verdictOf(m[1])]);
+  });
+  return out.slice(0, 8);
+}
+function moneyNums(t) {
+  return (String(t).match(/(?:^|[^\d])(\d{2,4})(?!\d)/g) || [])
+    .map(x => parseInt(String(x).replace(/\D/g, ''), 10))
+    .filter(n => n >= 100 && n <= 4000 && !(n >= 1900 && n <= 2100));
+}
+function facCard(head, raw) {
+  const t = cleanText(raw);
+  if (!t) return '';
+  const chips = facChips(t);
+  const nums = moneyNums(t);
+  const marks = (t.match(/[①②③④⑤⑥⑦⑧⑨]/g) || []).length;
+  let note = '';
+  if (/住|宿/.test(head || '') && nums.length >= 2) {
+    note = '历史价 ' + Math.min.apply(null, nums) + '–' + Math.max.apply(null, nums) + ' 元/晚 · 2026 国庆待报';
+  } else if (/露营/.test(head || '') && marks >= 2) {
+    note = '已有点位 ' + marks + ' 处';
+  }
+  if (!chips.length) note = note || leadOf(firstClause(t), 66);
+  const chipsHTML = chips.length ? '<div class="fac-chips">' + chips.map(c =>
+    '<span class="fc"><i>' + esc(c[0]) + '</i>' + esc(c[1]) + '</span>').join('') + '</div>' : '';
+  return '<div class="fac-card">'
+    + (head ? '<div class="fac-head"><b>' + esc(head) + '</b>'
+        + (note ? '<span>' + esc(note) + '</span>' : '') + '</div>' : '')
+    + chipsHTML
+    + '<details class="fold tight"><summary>原始记录</summary><p class="raw-p">' + esc(t) + '</p></details>'
+    + '</div>';
+}
+function facBlock(fac) {
+  const keys = Object.keys(fac || {});
+  if (!keys.length) return '';
+  return '<div class="fac-wrap">' + keys.map(k => facCard(FAC_LONG[k] || k, fac[k])).join('') + '</div>';
+}
+function facBlockList(pairs) {
+  const list = (pairs || []).filter(x => x && x[1]);
+  if (!list.length) return '';
+  return '<div class="fac-wrap">' + list.map(x => facCard(x[0], x[1])).join('') + '</div>';
+}
+
+/* ─ 费用：项目 / 金额 / 口径 三列，原始记录折叠 ────────────────── */
+const BASIS_TOKEN = /(按人|按车|按趟|按晚|按间|按天|按次|整包|含餐|不含餐|含早|含门票|不含门票|含等待|不含等待|含区间车|不含区间车|已成交|未成交|问价|自报|免费|往返|单程|接送|待核|口径不明|不进预算|现场价)/g;
+function basisOf(s) {
+  const t = cleanText(s);
+  const out = [];
+  (t.match(BASIS_TOKEN) || []).forEach(x => { if (out.indexOf(x) < 0) out.push(x); });
+  return out.slice(0, 6);
+}
+function moneyTbl(rows) {
+  const list = (rows || []).filter(Boolean);
+  if (!list.length) return '';
+  const parsed = list.map(function (r) {
+    const head = cleanText(r[0]);
+    const whole = cleanText(r[1]);
+    const parts = whole.split(/[｜|]/).map(x => x.trim()).filter(Boolean);
+    let what = '', amount = '', tail = '';
+    if (parts.length >= 2) {
+      what = parts[0]; amount = stripParen(parts[1]).trim(); tail = parts.slice(2).join('；');
+    } else {
+      what = parts[0] || head; tail = whole;
+      const m = /(\d[\d,.]*)\s*(?:元|块)(?:\s*[／/]\s*(?:人|车|趟|晚|间))?/.exec(whole);
+      amount = m ? m[0] : '';
+    }
+    if (!amount || /^(未给价|未给|无报价|未给报价|待询价|待确认)$/.test(amount)) {
+      const m2 = /(\d[\d,.]*)\s*(?:元|块)(?:\s*[／/]\s*(?:人|车|趟|晚|间))?/.exec(whole);
+      amount = m2 ? m2[0] : '待报价';
+    }
+    if (/免费/.test(amount)) amount = '免费';
+    let basis = basisOf(tail || whole);
+    if (!basis.length) basis = basisOf(whole);
+    return { head: head, what: what, amount: amount, basis: basis, raw: whole };
+  });
+  const body = parsed.map(function (p) {
+    let label = [p.head, p.what].filter(Boolean);
+    label = label.filter(function (v, i) { return label.indexOf(v) === i; }).join(' · ');
+    return '<tr><td class="lead-cell">' + esc(label) + '</td>'
+      + '<td class="num">' + esc(p.amount) + '</td>'
+      + '<td>' + (p.basis.length
+          ? p.basis.map(b => '<span class="bs">' + esc(b) + '</span>').join('')
+          : '<span class="bs muted">口径待核</span>') + '</td></tr>';
+  }).join('');
+  const raw = '<details class="fold tight"><summary>原始记录与出处</summary><ul class="raw-list">'
+    + parsed.map(p => '<li><b>' + esc(p.what || p.head || '费用') + '</b><span>' + esc(p.raw) + '</span></li>').join('')
+    + '</ul></details>';
+  return '<div class="wrap-tbl money"><table><thead><tr><th>项目</th><th>金额</th><th>口径</th></tr></thead>'
+    + '<tbody>' + body + '</tbody></table></div>' + raw;
+}
+
+/* ─ 速查：并进正文顶部横条，不再占右侧一栏 ───────────────────── */
+function factStrip(rows, nav) {
+  const body = (rows || []).filter(r => r && r[1])
+    .map(r => '<div class="fs-item"><small>' + esc(r[0]) + '</small><b>' + r[1] + '</b></div>').join('');
+  if (!body && !nav) return '';
+  return '<div class="fact-strip">' + body + (nav || '') + '</div>';
+}
+
 function tagOf(note) {
   const n = (note && typeof note === 'object') ? note : {};
   const raw = String(n.nature || n.label || '');
@@ -134,10 +262,35 @@ function quoteHTML(q, name) {
     + (name ? '<span class="qplace">' + esc(name) + '</span>' : '')
     + (q && q.note ? Trip.noteLink(q.note) : '') + '</figcaption></figure>';
 }
+/* 官方导览图交互与首页同一套：单击切换说明，双击打开大图。
+   触摸端不能双击，保留卡片内的「全屏查看官方全图」按钮兜底。 */
+function bindGuides(root) {
+  (root || document).querySelectorAll('[data-guide]').forEach(function (b) {
+    const g = (TRIP.guides || []).filter(x => x.id === b.dataset.guide)[0];
+    if (!g) return;
+    if (!b.classList.contains('guide-fig')) {
+      b.addEventListener('click', function () { Guide.open(g.file, g.name, g.facility_lines); });
+      return;
+    }
+    let timer = null;
+    b.addEventListener('click', function () {
+      if (timer) {
+        clearTimeout(timer); timer = null;
+        Guide.open(g.file, g.name, g.facility_lines);
+        return;
+      }
+      timer = setTimeout(function () {
+        timer = null;
+        const w = b.closest('.guide-inline');
+        if (w) w.classList.toggle('folded');
+      }, 200);
+    });
+  });
+}
 function guideHTML(g, alt) {
   if (!g) return '';
   return '<div class="guide-inline">'
-    + '<button class="guide-fig" data-guide="' + esc(g.id) + '" aria-label="放大查看官方导览图">'
+    + '<button class="guide-fig" data-guide="' + esc(g.id) + '" aria-label="官方导览图：单击看说明，双击看大图">'
     + '<img src="' + esc(g.file) + '" alt="' + esc(alt || g.name) + '" loading="lazy"></button>'
     + '<div class="guide-text"><p class="p-body">' + esc(leadOf(cleanText(g.use), 110)) + '</p>'
     + (g.official_vs_us ? '<p class="p-body"><b>官方全图 ≠ 本次走法：</b>'
@@ -288,8 +441,8 @@ function renderDay(d) {
     .filter(t => t && t.route).map(t => Trip.route(t.route)).filter(Boolean);
   if (hikes.length) c += sec('走的这一段', hikes.map(hikeCard).join(''));
   if (ps.length) c += sec('当天经过', '<div class="pgrid">' + ps.map(placeCard).join('') + '</div>');
-  if (d.meals && d.meals.length) c += sec('吃饭与补给', ulHTML(d.meals.map(m =>
-    m.place + '：' + (m.text || ''))));
+  if (d.meals && d.meals.length) c += sec('吃饭与补给',
+    facBlockList(d.meals.map(m => [m.place, m.text])), '先看结论，原始记录收在每一块下面');
   const sleepPlaces = ps.filter(p => p.facilities && (p.facilities.lodging || p.facilities.camp));
   c += sec('今晚落脚', '<div class="sleep-card"><b>' + esc(leadOf(cleanText(d.sleep), 60)) + '</b>'
     + (sleepPlaces.length ? ulHTML(sleepPlaces.map(p => p.name + '：' + (p.facilities.lodging || p.facilities.camp))) : '')
@@ -299,7 +452,8 @@ function renderDay(d) {
   const crowd = (TRIP.crowd || []).filter(r => ps.some(p => String(r['地点'] || '').indexOf(p.name) >= 0));
   if (crowd.length) c += sec('错峰怎么执行', ulHTML(crowd.map(r =>
     r['地点'] + '：本次' + (r['本次怎么执行'] || '') + (r['明确避开什么'] ? '；避开' + r['明确避开什么'] : ''))));
-  if (d.cost && d.cost.length) c += sec('当天费用', rowsHTML(d.cost.map(x => [x.item, x.text]), ['项目', '口径与金额']));
+  if (d.cost && d.cost.length) c += sec('当天费用', moneyTbl(d.cost.map(x => [x.item, x.text])),
+    '金额与口径分开看，原始记录折叠在下方');
   if (d.topics && d.topics.length) {
     c += sec('相关攻略', '<div class="link-grid">' + d.topics.map(id => {
       const t = Trip.topic(id);
@@ -308,7 +462,7 @@ function renderDay(d) {
     }).join('') + '</div>');
   }
   const gs = (TRIP.guides || []).filter(g => (d.places || []).indexOf(g.place) >= 0);
-  if (gs.length) c += sec('官方导览图', gs.map(g => guideHTML(g, g.name)).join(''), '点图放大，或全屏查看完整路网');
+  if (gs.length) c += sec('官方导览图', gs.map(g => guideHTML(g, g.name)).join(''), '单击看图说明，双击看大图');
   if (d.photos && d.photos.length) c += sec('当天实景', galleryHTML(d.photos, ''));
   if (d.quotes && d.quotes.length) c += sec('代表原话',
     '<p class="sec-lead">只留结论与出处，原帖在下方入口</p>'
@@ -317,27 +471,22 @@ function renderDay(d) {
     const nl = noteLinksHTML(d.quotes.map(q => q.note), 6);
     if (nl) c += sec('代表原帖', nl);
   }
-  document.getElementById('content').innerHTML = c;
-
   const i = TRIP.days.map(x => x.id).indexOf(d.id);
   const prev = i > 0 ? TRIP.days[i - 1] : null;
   const next = i < TRIP.days.length - 1 ? TRIP.days[i + 1] : null;
-  document.getElementById('facts').innerHTML = '<h3>当天速查</h3>'
-    + factsHTML([['当日核心', esc(leadOf(cleanText(d.core), 90))],
-      ['建议节奏', esc(leadOf(cleanText(d.pace), 90))],
-      ['大包去向', esc(leadOf(cleanText(d.bag), 90))],
-      ['最晚红线', esc(leadOf(cleanText(d.redline), 90))],
-      ['先删什么', esc(leadOf(cleanText(d.cut_first), 90))],
-      ['天气替代', esc(leadOf(cleanText(d.weather_alt), 90))],
-      ['实拍', String((d.photos || []).length) + ' 张']])
-    + '<div class="day-nav">'
+  const strip = factStrip([
+    ['当日核心', esc(leadOf(cleanText(d.core), 60))],
+    ['建议节奏', esc(leadOf(cleanText(d.pace), 60))],
+    ['大包去向', esc(leadOf(cleanText(d.bag), 56))],
+    ['最晚红线', esc(leadOf(cleanText(d.redline), 56))],
+    ['先删什么', esc(leadOf(cleanText(d.cut_first), 56))],
+    ['天气替代', esc(leadOf(cleanText(d.weather_alt), 56))]
+  ], '<div class="day-nav">'
     + '<a href="' + (prev ? 'day.html?id=' + prev.id : 'index.html#days') + '">← ' + (prev ? DAY_LABEL(prev.id) : '回首页') + '</a>'
     + '<a href="' + (next ? 'day.html?id=' + next.id : 'index.html#days') + '">' + (next ? DAY_LABEL(next.id) : '回首页') + ' →</a>'
-    + '</div>';
-  $$('#content [data-guide]').forEach(b => b.addEventListener('click', () => {
-    const g = (TRIP.guides || []).filter(x => x.id === b.dataset.guide)[0];
-    if (g) Guide.open(g.file, g.name, g.facility_lines);
-  }));
+    + '</div>');
+  document.getElementById('content').innerHTML = strip + c;
+  bindGuides(document.getElementById('content'));
 }
 
 /* ══ PLACE ═══════════════════════════════════════════════════════ */
@@ -378,19 +527,14 @@ function renderPlace(p) {
   if (p.risks && p.risks.length) c += sec('风险与撤退条件', ulHTML(cleanList(p.risks), 'risk'));
   if (p.alternatives && p.alternatives.length) c += sec('天气不好怎么替', ulHTML(cleanList(p.alternatives)));
   const fk = Object.keys(p.facilities || {});
-  if (fk.length) {
-    const label = { lodging: '住宿', camp: '露营', supply: '吃饭与补给', luggage: '行李', ticket: '门票与区间车' };
-    c += sec('设施与补给', ulHTML(fk.map(k => (label[k] || k) + '：' + p.facilities[k])));
-  }
-  if (p.cost && p.cost.length) c += sec('这里的钱', rowsHTML(p.cost.map(x => {
-    const parts = cleanText(x).split('｜').map(s => s.trim()).filter(Boolean);
-    return parts.length > 1 ? [parts[0], parts.slice(1).join('：')] : [cleanText(x), ''];
-  }), ['项目', '口径与金额']));
+  if (fk.length) c += sec('设施与补给', facBlock(p.facilities), '先看结论，原始记录收在每一块下面');
+  if (p.cost && p.cost.length) c += sec('这里的钱', moneyTbl(p.cost.map(x => ['', x])),
+    '金额与口径分开看，原始记录折叠在下方');
   if (p.tips && p.tips.length) c += sec('提示', ulHTML(cleanList(p.tips)));
   if (p.verify && p.verify.length) c += sec('临行要现场确认', '<ul class="verify-list">'
     + cleanList(p.verify).map(v => '<li>' + esc(leadOf(v, 96)) + '</li>').join('') + '</ul>');
   c += sec('图证', evidenceHTML(p));
-  if (g) c += sec('官方导览图', guideHTML(g, p.name + '官方导览图'), '点图放大，或全屏查看完整路网');
+  if (g) c += sec('官方导览图', guideHTML(g, p.name + '官方导览图'), '单击看图说明，双击看大图');
   if (p.quotes && p.quotes.length) c += sec('代表评价',
     '<p class="sec-lead">正面与反对意见都保留结论，原帖见下方入口</p>'
     + p.quotes.map(q => quoteHTML(q, p.name)).join(''));
@@ -399,19 +543,16 @@ function renderPlace(p) {
       + (p.note_count ? '，本页共参考 ' + p.note_count + ' 篇' : '') + '</p>');
   }
   if (p.photos && p.photos.length) c += sec('实景', galleryHTML(p.photos, p.name));
-  document.getElementById('content').innerHTML = c;
-
   const relatedTopics = (p.topics || []).map(id => Trip.topic(id)).filter(Boolean);
-  document.getElementById('facts').innerHTML = '<h3>地点速查</h3>'
-    + factsHTML([['结论硬度', esc(leadOf(cleanText(p.confidence) || '临行确认', 24))],
-      ['类型', esc(leadOf(cleanText(p.type), 34))],
-      ['留多久', esc(leadOf(cleanText(p.duration), 30))],
-      ['出现在', (p.days || []).map(x => '<a href="day.html?id=' + x + '">' + DAY_LABEL(x) + '</a>').join(' ')],
-      ['相关攻略', relatedTopics.map(t => '<a href="topic.html?id=' + t.id + '">' + esc(t.name) + '</a>').join(' ')]])
-    + '<div class="day-nav"><a href="index.html#journey">回行程图定位 →</a></div>';
-  $$('#content [data-guide]').forEach(b => b.addEventListener('click', () => {
-    if (g) Guide.open(g.file, g.name, g.facility_lines);
-  }));
+  const strip = factStrip([
+    ['结论硬度', esc(leadOf(cleanText(p.confidence) || '临行确认', 24))],
+    ['类型', esc(leadOf(cleanText(p.type), 30))],
+    ['留多久', esc(leadOf(cleanText(p.duration), 28))],
+    ['出现在', (p.days || []).map(x => '<a href="day.html?id=' + x + '">' + DAY_LABEL(x) + '</a>').join(' ')],
+    ['相关攻略', relatedTopics.map(t => '<a href="topic.html?id=' + t.id + '">' + esc(t.name) + '</a>').join(' ')]
+  ], '<div class="day-nav"><a href="index.html#journey">回行程图定位 →</a></div>');
+  document.getElementById('content').innerHTML = strip + c;
+  bindGuides(document.getElementById('content'));
 }
 
 /* ══ TOPIC ══════════════════════════════════════════════════════ */
@@ -454,15 +595,14 @@ function renderTopic(t) {
   (t.tips || []).forEach(x => (x.refs || []).forEach(r => refs.push(r)));
   const nl = noteLinksHTML(refs, 8);
   if (nl) c += sec('代表原帖', nl + '<p class="sec-lead">点开是小红书原文</p>');
-  document.getElementById('content').innerHTML = c;
-
-  document.getElementById('facts').innerHTML = '<h3>攻略速查</h3>'
-    + factsHTML([['一句结论', esc(leadOf(cleanText(t.conclusion), 90))],
-      ['动作', (t.tips || []).length + ' 条'],
-      ['涉及地点', (t.places || []).length + ' 个'],
-      ['涉及路线', (t.routes || []).length + ' 条'],
-      ['原帖', (t.note_count || 0) + ' 篇']])
-    + '<div class="day-nav"><a href="index.html#topics">回首页攻略区 →</a></div>';
+  const strip = factStrip([
+    ['一句结论', esc(leadOf(cleanText(t.conclusion), 70))],
+    ['动作', (t.tips || []).length + ' 条'],
+    ['涉及地点', (t.places || []).length + ' 个'],
+    ['涉及路线', (t.routes || []).length + ' 条'],
+    ['原帖', (t.note_count || 0) + ' 篇']
+  ], '<div class="day-nav"><a href="index.html#topics">回首页攻略区 →</a></div>');
+  document.getElementById('content').innerHTML = strip + c;
 }
 function ulWithBasis(tips) {
   const items = (tips || []).filter(Boolean).map(x => {
@@ -550,15 +690,14 @@ function renderRoute(r) {
     '<a class="link-card" href="day.html?id=' + esc(d.id) + '"><b>' + esc(d.date) + '</b><span>'
     + esc(leadOf(cleanText(d.short), 30)) + '</span></a>').join('') + '</div>'
     : '<p class="p-lead">' + esc(leadOf(cleanText(r.day), 40)) + '</p>');
-  document.getElementById('content').innerHTML = c;
+  const strip = factStrip([
+    ['类型', r.kind === 'hike' ? '徒步' : '转场'],
+    ['状态', esc(leadOf(cleanText(r.status), 24))],
+    ['日期', esc(cleanText(r.day))],
+    ['几何', ((t.points || []).length) + ' 点']
+  ], '<div class="day-nav"><a href="index.html#journey">回行程图 →</a></div>');
+  document.getElementById('content').innerHTML = strip + c;
   drawTrace(t);
-
-  document.getElementById('facts').innerHTML = '<h3>路段速查</h3>'
-    + factsHTML([['类型', r.kind === 'hike' ? '徒步' : '转场'],
-      ['状态', esc(leadOf(cleanText(r.status), 24))],
-      ['日期', esc(cleanText(r.day))],
-      ['几何', ((t.points || []).length) + ' 点']])
-    + '<div class="day-nav"><a href="index.html#journey">回行程图 →</a></div>';
 }
 function drawTrace(t) {
   const box = document.getElementById('trace');
@@ -697,9 +836,10 @@ function renderPlans() {
       + '</article></div>';
   }
 
-  document.getElementById('facts').innerHTML = '<h3>怎么选</h3>'
-    + factsHTML(P.map(x => [x.name, esc(leadOf(cleanText(x.gain), 60))]))
-    + '<div class="day-nav"><a href="index.html#plans">回首页切换方案 →</a></div>';
+  const strip = factStrip(P.map(x => [x.name, esc(leadOf(cleanText(x.gain), 60))]),
+    '<div class="day-nav"><a href="index.html#plans">回首页切换方案 →</a></div>');
+  const host = document.getElementById('content');
+  if (host) host.insertAdjacentHTML('afterbegin', strip);
   paint();
   loadGeoMap(paint);
 }

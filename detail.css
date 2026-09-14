@@ -245,6 +245,10 @@ body[data-type="budget"] .wrap-tbl .src,body[data-type="tasks"] .tk-src{display:
 .guide-text p{margin:0 0 8px}
 .guide-text .detail-list li{padding:8px 0;font-size:13px}
 .guide-inline+.guide-inline{margin-top:12px}
+.guide-inline.folded{grid-template-columns:minmax(0,1fr)}
+.guide-inline.folded .guide-text{display:none}
+.guide-fig:focus-visible,.plan-btn:focus-visible,.seg button:focus-visible,
+.xrow input:focus-visible,.off-thumb:focus-visible{outline:2px solid var(--forest);outline-offset:2px}
 
 /* ══ 实拍／图证 ══════════════════════════════════════════════ */
 .shot-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
@@ -462,4 +466,75 @@ body[data-type="budget"] .wrap-tbl .src,body[data-type="tasks"] .tk-src{display:
   .plan-nights .plan-day small{flex-basis:100%;margin-left:0}
   .xrow{grid-template-columns:minmax(0,1fr)}
   .xrow input{width:100%}
+}
+
+/* ══ 客户版清理：内部出处／版本标记／过程口径不出现给读者 ═══════════
+   数据层（tools/gen_data.py → data/*.json）仍保留这些字段，这里只控制呈现。
+   ⚠ 下面两条 ::before 是把内部口径改写成对外文案；若数据层日后已清洗，
+     请一并删除对应的 ::before 规则，避免出现两套说法。 */
+body[data-type="budget"] .ncell>small,
+body[data-type="budget"] .opt small,
+body[data-type="budget"] .scen-grid .cav{display:none}
+/* 「逐晚住宿口径（底库）」整段来自内部台账，且与上方逐晚开关重复 → 不面向读者 */
+body[data-type="budget"] .detail-section:has(table):not(:has(#dayCost)):not(:has(.ask)):not(:has(th:nth-child(6))){display:none}
+body[data-type="budget"] .scen-grid+p.rule{font-size:0;color:transparent;background:none;padding:0}
+body[data-type="budget"] .scen-grid+p.rule:before{content:"三档都只计已确认与要复核的票车、住宿、装备；四段整车、往返火车与观鱼台票全部待询价、一律另列。按现有整车量级粗估，可能再加 600—1200 元/人（估算，不是报价）。";display:block;font-size:12.5px;line-height:1.7;color:var(--muted)}
+body[data-type="budget"] #facts div:has(>a[href="tasks.html"])>small{display:none}
+body[data-type="tasks"] #hero .verdict{font-size:0;color:transparent}
+body[data-type="tasks"] #hero .verdict:before{content:"每项都写明谁负责、几号前办完、办成之后要留下什么凭据，以及它影响哪一天和多少钱。";display:block;font-size:15.5px;line-height:1.75;font-weight:600;color:var(--ink)}
+@media(max-width:680px){
+  body[data-type="tasks"] #hero .verdict:before{font-size:14px}
+  body[data-type="budget"] .scen-grid+p.rule:before{font-size:12.5px}
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   阅读版式 v13：速查并进正文顶部横条，不再占右侧一栏；
+   设施与费用先给结论，原始记录折叠在下面。
+   ══════════════════════════════════════════════════════════════════ */
+.detail-grid{grid-template-columns:minmax(0,1fr);gap:0}
+#facts{display:none !important}
+
+.fact-strip{display:flex;flex-wrap:wrap;gap:2px 28px;align-items:flex-start;
+  background:var(--white);border:1px solid var(--line);border-radius:10px;
+  padding:14px 20px 12px;margin:0 0 36px}
+.fact-strip .fs-item{display:flex;align-items:baseline;gap:9px;padding:6px 0;
+  min-width:0;flex:1 1 260px}
+.fact-strip .fs-item small{flex:0 0 auto;font-size:11.5px;color:#98a19c;letter-spacing:.02em}
+.fact-strip .fs-item b{font-size:13px;font-weight:600;color:var(--ink);line-height:1.6}
+.fact-strip .fs-item a{color:var(--forest);text-decoration:none;border-bottom:1px solid transparent}
+.fact-strip .fs-item a:hover{border-bottom-color:var(--forest)}
+.fact-strip .day-nav{flex:1 1 100%;margin-top:6px;padding-top:10px;
+  border-top:1px solid var(--line-soft);justify-content:flex-start;gap:22px}
+
+.fac-wrap{display:grid;gap:12px}
+.fac-card{background:var(--white);border:1px solid var(--line);border-radius:8px;
+  padding:14px 16px 12px}
+.fac-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+.fac-head b{font-size:14px;font-weight:700;color:var(--ink)}
+.fac-head span{font-size:12.5px;color:var(--muted)}
+.fac-chips{display:flex;flex-wrap:wrap;gap:6px}
+.fac-chips .fc{display:inline-flex;align-items:baseline;gap:6px;border:1px solid var(--line);
+  border-radius:6px;background:var(--tint);padding:5px 9px;font-size:12.5px;color:var(--ink);
+  line-height:1.4;font-weight:600}
+.fac-chips .fc i{font-style:normal;font-size:11.5px;font-weight:500;color:#8d968f}
+.fac-card .fold{margin-top:10px}
+.fac-card .raw-p{margin:8px 0 0;font-size:12.5px;line-height:1.75;color:var(--muted)}
+
+.wrap-tbl.money table{font-size:13px}
+.wrap-tbl.money th:nth-child(2),.wrap-tbl.money td:nth-child(2){width:118px}
+.wrap-tbl.money th:nth-child(3),.wrap-tbl.money td:nth-child(3){width:40%}
+.wrap-tbl.money td.num{font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+.wrap-tbl.money .bs{display:inline-block;margin:0 5px 4px 0;padding:2px 7px;border-radius:5px;
+  background:var(--tint);border:1px solid var(--line-soft);font-size:11.5px;color:#5c665f;
+  white-space:nowrap}
+.wrap-tbl.money .bs.muted{color:#98a19c}
+.raw-list{margin:8px 0 0;padding:0;list-style:none;display:grid;gap:10px}
+.raw-list li{display:grid;gap:3px}
+.raw-list li>b{font-size:12.5px;font-weight:700;color:var(--ink)}
+.raw-list li>span{font-size:12.5px;line-height:1.75;color:var(--muted)}
+@media(max-width:860px){
+  .fact-strip{padding:12px 14px 10px}
+  .fact-strip .fs-item{flex:1 1 100%}
+  .wrap-tbl.money table{min-width:0}
+  .wrap-tbl.money th:nth-child(3),.wrap-tbl.money td:nth-child(3){width:auto}
 }
