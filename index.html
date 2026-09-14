@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#102b27">
+<meta name="description" content="三个人的阿勒泰、禾木、白哈巴与喀纳斯秋日现场手册：逐日动线、徒步采用段、露营与费用，出发前和现场都能直接用。">
+<title>我们的阿勒泰｜2026 秋日现场手册</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%rect width='64' height='64' rx='15' fill='%23102b27'/%3E<path d='M7 48 25 16l8 14 8-11 16 29z' fill='%23e5bd70'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="vendor/leaflet.css">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<main id="top">
+  <section class="hero">
+    <div class="hero-copy">
+      <p class="kicker">2026.09.24 — 10.02 · 三人 · 全程不自驾</p>
+      <h1>乌鲁木齐夜火车进，<br>阿勒泰夜火车出。</h1>
+      <p class="lede">中间九天只围绕阿勒泰的秋天：阿禾公路到禾木，两段村外轻徒步，白哈巴一晚，
+        喀纳斯两晚；9/30 傍晚下撤贾登峪，第二天清早直接赶火车。</p>
+    </div>
+    <div class="hero-cta" id="planBtns" role="tablist" aria-label="方案切换"></div>
+  </section>
+
+  <section class="map-module">
+    <div class="map-stage">
+      <div class="map-overlay">
+        <div class="scope-switch" id="scopeSwitch">
+          <button data-scope="core">喀纳斯</button>
+          <button data-scope="full" class="active">阿勒泰全程</button>
+        </div>
+        <b id="mapTitle"></b>
+      </div>
+      <div id="leafmap" role="application" aria-label="行程地图，可缩放拖动"></div>
+      <svg id="routeMap" role="img" aria-label="按真实坐标与轨迹绘制的行程路线图"></svg>
+      <div class="map-legend" id="mapLegend"></div>
+      <div class="map-note" id="mapNote"></div>
+      <aside class="map-drawer" id="mapDrawer"></aside>
+    </div>
+    <div class="day-strip" id="dayStrip" aria-label="九天日程"></div>
+    <div class="day-detail" id="dayDetail" hidden></div>
+  </section>
+
+  <section class="block" id="plans">
+    <header class="block-head"><p class="kicker">方案对比</p><h2>三条路线，差异只在七处</h2>
+      <p class="block-sub">高亮的是地图上正在走的方案。<a class="btn-line small" href="plans.html">打开完整对比 →</a></p></header>
+    <div id="planTable"></div>
+  </section>
+
+  <section class="block" id="moneysec">
+    <header class="block-head"><p class="kicker">费用</p><h2>钱花在哪，一天一天对得上</h2>
+      <p class="block-sub">住、吃、交通、门票按天拆开，待报价项单独标出。<a class="btn-line small" href="budget.html">费用计算器 →</a></p></header>
+    <div id="moneyList"></div>
+  </section>
+
+  <section class="block" id="todosec">
+    <header class="block-head"><p class="kicker">出发前事项</p><h2>这五件先办，其余十件有清单</h2>
+      <p class="block-sub">按截止时间排序，办完一件划掉一件。<a class="btn-line small" href="tasks.html">全部 15 项 →</a></p></header>
+    <ol class="fm-list" id="todoList"></ol>
+  </section>
+
+  <section class="block" id="days">
+    <header class="block-head"><p class="kicker">逐日</p><h2>九天，一天一张卡</h2>
+      <p class="block-sub">点卡片进当日完整日程，点地图内的线路看这一段的路况。</p></header>
+    <div id="dayFeed"></div>
+  </section>
+
+  <section class="block" id="topics">
+    <header class="block-head"><p class="kicker">攻略</p><h2>十一个现场问题，直接给答案</h2>
+      <p class="block-sub">先给结论，再给这一步该做什么。</p></header>
+    <div class="guide-grid" id="guideGrid"></div>
+  </section>
+
+  <section class="block" id="official">
+    <header class="block-head"><p class="kicker">官方导览图</p><h2>四张图，单击看要点，双击看全图</h2>
+      <p class="block-sub">官方原文已提炼成要点，只留现场要用的那几句。</p></header>
+    <div class="off-thumbs" id="offThumbs"></div>
+    <div class="off-panel" id="offPanel"></div>
+  </section>
+</main>
+<script>window._AMapSecurityConfig={securityJsCode:"8b874c815a4c3ef85971b90eb9fe4343"};</script>
+<script defer src="https://webapi.amap.com/maps?v=2.0&key=b579fc947bc5de2d4fe8ef587fd7fbac&plugin=AMap.Driving,AMap.ToolBar"></script>
+<script defer src="vendor/leaflet.js"></script>
+<script defer src="data/roads.js"></script>
+<script defer src="geomap.js"></script>
+<script defer src="site-data.js"></script>
+<script defer src="tracks.js"></script>
+<script defer src="ui.js"></script>
+<script defer src="data/map-config.js"></script>
+<script defer src="map.js"></script>
+<script defer src="amap.js"></script>
+<script defer src="app.js"></script>
+</body>
+</html>

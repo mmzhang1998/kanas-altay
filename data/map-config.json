@@ -1,0 +1,10 @@
+{
+ "engine": "svg",
+ "amap_key": "",
+ "note": "提示词 §8：优先高德 JS API。没有合法 Key 时用真实坐标 SVG 作为稳定第一版，并保留本适配接口。",
+ "how_to_switch": "把合法 Web 端 Key 填进 amap_key（或在页面里设置 window.AMAP_KEY），刷新即切换高德底图。",
+ "forbidden": [
+  "不用会 403 的公共 OSM 瓦片",
+  "地图失败时正文必须仍可用"
+ ]
+}
