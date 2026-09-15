@@ -315,6 +315,9 @@ function ulHTML(arr, cls) {
   const items = (arr || []).filter(Boolean).map(itemHTML).filter(Boolean).join('');
   return items ? '<ul class="detail-list ' + (cls || '') + '">' + items + '</ul>' : '';
 }
+function chipText(t){                    /* 标签是短词，不留句末标点 */
+  return String(t || '').replace(/[。．\.；;，,、：:\s]+$/, '');
+}
 function withUnit(v, unit){              /* 字段缺失时不留 undefined */
   if (v == null || v === '') return '';
   return String(v) + (unit || '');
@@ -763,7 +766,7 @@ function renderPlace(p) {
     + '<div class="chip-row">' + (p.confidence ? '<span class="chip">'
         + esc(leadOf(cleanText(p.confidence), 20)) + '</span>' : '')
     + '<span class="chip">实拍 ' + (p.photo_count || 0) + ' 张</span>'
-    + (p.duration ? '<span class="chip">' + esc(leadOf(cleanText(p.duration), 24)) + '</span>' : '') + '</div>'
+    + (p.duration ? '<span class="chip">' + esc(chipText(leadOf(cleanText(p.duration), 24))) + '</span>' : '') + '</div>'
     + '</div>'
     + (ph ? '<figure class="hero-shot"><img src="' + esc(ph.file) + '" alt="' + esc(p.name)
         + ' 实景" loading="lazy"></figure>'
