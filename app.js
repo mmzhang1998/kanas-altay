@@ -26,6 +26,10 @@
   const ENG = () => (window.TripAMap && window.TripAMap.active) ? window.TripAMap
     : (window.TripLeaf && window.TripLeaf.ready) ? window.TripLeaf : null;
   const TK = (window.TRACKS ? TRACKS.tracks : []);
+  /* 可选露营点：数据里只有村庄坐标，没有独立营位。这里用暖金帐篷标记与"今晚住这"的圆钉区分开，
+     露营点不再只在高德/Learflet 引擎里出现、SVG 兜底时整批消失。 */
+  const CAMP = {};
+  (GeoMap.CAMP_IDS ? GeoMap.CAMP_IDS() : []).forEach(id => { CAMP[id] = 1; });
   const trackById = id => TK.filter(t => t.id === id)[0];
   const placeById = id => P.filter(p => p.id === id)[0];
   const withCoord = P.filter(p => p.coord && p.coord[0]);
@@ -157,6 +161,10 @@
                             transform: 'translate(' + q[0].toFixed(1) + ' ' + q[1].toFixed(1) + ')' });
         g.append(el('circle', { r: 7.5, class: 'gm-pin-ring' }));
         g.append(el('circle', { r: 3.4, class: 'gm-pin-core' }));
+        if (CAMP[p.id]) {   /* 帐篷角标：偏移在图钉右下，不遮挡圆环与标签 */
+          g.append(el('polygon', { class: 'gm-camp', points: '-5.5,7 5.5,7 0,-1', transform: 'translate(-13 5)' }));
+          const ct = el('title', {}); ct.textContent = p.name + ' · 可选露营点'; g.append(ct);
+        }
         const tw = p.name.length * 12.4 + 6;
         const CAND = [[11, 4], [11, 21], [11, -13], [11, 38], [-11 - tw, 4], [-11 - tw, 21], [11, -30], [-11 - tw, -13]];
         let spot = null;
@@ -201,10 +209,12 @@
         ? '<div class="lg-plans">' + ['main', 'alt_a', 'alt_b'].map(id =>
             '<span class="lg-plan" style="--pc:' + GeoMap.PLAN_COLOR[id] + '"><i></i>'
             + esc(GeoMap.PLAN_NAME[id].split(' · ')[0]) + '</span>').join('') + '</div>' : '')
-        + '<div class="lg-kinds">' + Object.keys(kinds).map(k =>
+        + '<div class="lg-kinds">' + ['drive', 'shuttle', 'hike', 'schem', 'stay'].filter(k => kinds[k]).map(k =>
             '<button class="lg-' + k + (window.HIDE && window.HIDE[k] ? ' off' : '') + '" data-lg="' + k
             + '" aria-pressed="' + !(window.HIDE && window.HIDE[k]) + '"><i></i>' + (LBL[k] || LEGEND[k] || k)
-            + '</button>').join('') + '</div>';
+            + '</button>').join('')
+        + (Object.keys(CAMP).length ? '<span class="lg-camp-item"><i class="lg-camp"></i>可选露营点</span>' : '')
+        + '</div>';
       $$('#mapLegend [data-lg]').forEach(b => b.addEventListener('click', () => {
         window.HIDE = window.HIDE || {};
         const k = b.dataset.lg;
@@ -417,48 +427,31 @@
   /* ─ 九天总表：日程与当天花销同一条线，一眼看完 ─────────────────────── */
   /* 逐日口径：过夜地点、住宿区间、门票（元/人）。
      门票口径＝喀纳斯一进 230＋跨 48 小时补差 35＋白哈巴 30＋禾木 50，与费用页票种基线一致。 */
+  /*  逐日：九天各一张卡，同行并列，不打表 ───────────────────────────── */
   const DAY_TICKET = { '0924': 0, '0925': 50, '0926': 0, '0927': 30, '0928': 230,
     '0929': 0, '0930': 35, '1001': 0, '1002': 0 };
-  const DAY_STAY_TEXT = { '0924': '含票', '0925': '0—1000', '0926': '≤500', '0927': '0—500',
-    '0928': '≤600', '0929': '≤600', '0930': '≤500', '1001': '含票', '1002': '—' };
   const DAY_BED = { '0924': '夜火车', '0925': '禾木', '0926': '贾登峪', '0927': '白哈巴',
     '0928': '喀纳斯', '0929': '喀纳斯', '0930': '贾登峪', '1001': 'K9752 卧铺', '1002': '—' };
   const bedPlace = d => DAY_BED[d.id] || String(d.sleep || '').split('（')[0] || '—';
-  const bedCost = d => DAY_STAY_TEXT[d.id] || '—';
-  const dayTicket = d => (DAY_TICKET[d.id] == null ? 0 : DAY_TICKET[d.id]);
 
   function feed() {
     const host = $('#dayFeed');
     if (!host) return;
-    const rows = D.map(d => {
-      const quote = /包车|整车/.test(d.move || '');
+    host.innerHTML = '<div class="day-tiles">' + D.map(d => {
+      const stay = bedPlace(d);
       const ps = (d.places || []).map(placeById).filter(Boolean).slice(0, 3);
-      const tk = dayTicket(d);
-      return '<tr data-day="' + d.id + '">'
-        + '<td class="c-date"><b>' + d.date + '</b><span>' + esc(d.week) + '</span></td>'
-        + '<td class="c-topic"><b>' + esc(d.headline) + '</b>'
-        + ps.map(p => '<span class="tag">' + esc(p.name) + '</span>').join('') + '</td>'
-        + '<td class="c-move">' + esc(d.move || '—') + '</td>'
-        + '<td class="c-stay">' + esc(bedPlace(d)) + '</td>'
-        + '<td class="c-num">' + esc(bedCost(d)) + '</td>'
-        + '<td class="c-num free">100</td>'
-        + '<td class="c-num">' + (quote ? '<em class="q-chip">待报价</em>'
-            : '<span class="free">含票内</span>') + '</td>'
-        + '<td class="c-num">' + (tk ? tk : '<span class="free">0</span>') + '</td>'
-        + '<td class="c-go">→</td></tr>';
-    }).join('');
-    host.innerHTML = '<div class="dtable-wrap"><table class="dtable">'
-      + '<thead><tr><th>日期</th><th>当天安排</th><th>移动</th><th>过夜</th>'
-      + '<th class="c-num">住</th><th class="c-num">吃</th><th class="c-num">交通</th>'
-      + '<th class="c-num">门票</th><th></th></tr></thead><tbody>' + rows + '</tbody></table>'
-      + '<p class="dtable-note">住、吃、门票均为元/人：住按整间或帐篷兜底预估，露营记 0；'
-      + '吃 100 元/人·天；门票合计 345 元/人（喀纳斯一进 230＋跨 48 小时补差 35＋白哈巴 30＋禾木 50）。'
-      + '「待报价」是四段整车包车，拿到司机报价后到费用页重算。</p></div>';
-    host.querySelectorAll('tr[data-day]').forEach(tr => tr.addEventListener('click',
-      () => { location.href = 'day.html?id=' + tr.dataset.day; }));
+      return '<a class="day-tile" href="day.html?id=' + d.id + '">'
+        + '<header><b>' + d.date + '</b><span>' + esc(d.week) + '</span></header>'
+        + '<p class="dt-head">' + esc(d.headline) + '</p>'
+        + '<div class="dt-figs"><div><i>移动</i><span>' + esc(d.move || '—') + '</span></div>'
+        + '<div><i>过夜</i><span>' + esc(stay) + '</span></div></div>'
+        + (ps.length ? '<div class="dt-tags">' + ps.map(p => '<span>' + esc(p.name) + '</span>').join('') + '</div>' : '')
+        + '<footer><span class="dt-cut">先删：' + esc(d.cut_first || '—') + '</span><em>当日日程 →</em></footer></a>';
+    }).join('') + '</div>'
+      + '<p class="day-note">九天按天排，点任意一天进当日明细：几点的车、走哪条路、住哪、票怎么买都在里面。</p>';
   }
 
-  /* ─ 费用：关键数字 + 按天花费条，点一天直接跳到当天明细 ─────────────── */
+  /*  费用：六个关键数字 + 按天拆开（和日程同一套日期）───────────────────── */
   function money() {
     const host = $('#moneyList');
     if (!host) return;
@@ -468,37 +461,31 @@
     const EST = B.estimate || {};
     const cells = [
       ['已确认票车', fixed + ' 元/人', '三人共 ' + fixed * 3 + ' 元'],
-      ['整车预估', EST.charter_per_person || '600—1200 元/人', '四段整车' + (unknown ? '待司机报价' : '') + '，出价后重算'],
+      ['整车预估', EST.charter_per_person || '600—1200 元/人', '四段整车待司机报价，出价后重算'],
       ['装备租赁', '955 元/三人', '目标 ≤1000，阿勒泰租优先'],
       ['住宿上限', '≤600 元/间', '超了就用帐篷兜底'],
       ['餐饮', EST.food_per_person || '800—1000 元/人', '按 100 元/人·天 × 8 天备'],
-      ['预估人均', '约 ' + (EST.per_person || '2800—3400 元'), (EST.parts || '吃＋票＋住＋装备＋整车分摊') + '；火车实付另计'],
+      ['预估人均', (EST.per_person || '2800—3400') + ' 元', '吃＋票＋住＋装备＋整车分摊，火车实付另计'],
     ];
-    const strip = D.map(d => {
-      const bed = bedPlace(d);
-      const ticket = dayTicket(d);
-      const per = 100 + ticket;
-      const quote = /包车|整车/.test(d.move || '');
-      return '<button class="sp-day' + (quote ? ' has-quote' : '') + '" data-sp="' + d.id + '">'
-        + '<i>' + esc(d.date) + '</i>'
-        + '<b>' + per + '<em>元/人</em></b>'
-        + '<span>' + esc(bed) + ' · 住 ' + esc(bedCost(d))
-        + (ticket ? ' · 票 ' + ticket : '') + (quote ? ' · 车待报价' : '') + '</span></button>';
+    const stay = {};
+    (B.variable_stay || []).forEach(x => { if (x && x.night) stay[x.night] = x; });
+    const rows = D.filter(d => d.id !== '1002').map(d => {
+      const st = stay[d.id];
+      const stayTxt = st ? String(st.main_value || '').split('；')[0].slice(0, 20) : bedPlace(d);
+      const needQuote = /包车|整车/.test(d.move || '');
+      const ticket = DAY_TICKET[d.id] || 0;
+      return '<tr><td><b>' + d.date + '</b><span class="dc-w">' + esc(d.week) + '</span></td>'
+        + '<td>' + esc(stayTxt) + '</td><td>100</td>'
+        + '<td>' + (needQuote ? '<em class="dc-quote">待报价</em>' : '含票内') + '</td>'
+        + '<td class="dc-num">' + ticket + '</td></tr>';
     }).join('');
     host.innerHTML = '<div class="money-grid">' + cells.map(x =>
         '<div class="money-cell"><i>' + x[0] + '</i><b>' + x[1] + '</b><span>' + x[2] + '</span></div>').join('')
-      + '</div>'
-      + '<div class="spend-rail"><p class="spend-cap">按天看：吃 100 元/人·天 ＋ 当天门票，住另计；点一天跳到当天明细</p>'
-      + '<div class="spend-strip">' + strip + '</div></div>'
-      + '<div class="money-foot"><a class="btn-line small" href="budget.html">费用计算器 →</a>'
-      + '<p>四段整车包车待司机报价，拿到后进费用页重算。</p></div>';
-    host.querySelectorAll('[data-sp]').forEach(b => b.addEventListener('click', () => {
-      const row = document.querySelector('#dayFeed tr[data-day="' + b.dataset.sp + '"]');
-      if (!row) { location.href = 'day.html?id=' + b.dataset.sp; return; }
-      row.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      row.classList.add('flash');
-      setTimeout(() => row.classList.remove('flash'), 1600);
-    }));
+      + '</div><div class="money-days"><div class="md-head"><b>按天算</b>'
+      + '<span>元／人；住按「整间≤600 或帐篷」预估，吃 100 元/人·天</span>'
+      + '<a class="btn-line small" href="budget.html">费用计算器 →</a></div>'
+      + '<div class="tbl-wrap"><table class="cmp cost-tbl"><thead><tr><th>日期</th><th>住（预估）</th>'
+      + '<th>吃</th><th>交通</th><th class="num">门票</th></tr></thead><tbody>' + rows + '</tbody></table></div></div>';
   }
 
   /* ─ 出发前：五件必办 ───────────────────────────────────────────────── */

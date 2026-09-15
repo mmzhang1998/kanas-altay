@@ -5,13 +5,13 @@
 window.GeoMap = (function () {
   const R = window.ROADS || { water: [], ctx: [], legs: [] };
   const STYLE = {
-    drive:   { color: '#b0742c', width: 3.0, dash: null,  label: '包车／拼车（导航道路）' },
-    shuttle: { color: '#2e7f6e', width: 2.6, dash: null,  label: '景区区间车／摆渡（导航道路）' },
-    hike:    { color: '#4f8f5b', width: 2.5, dash: '0.1 7', label: '徒步路线' },
-    stub:    { color: '#9aa79f', width: 1.6, dash: '2 6', label: '接驳示意（无公开路网）' },
-    schem:   { color: '#8a948d', width: 2.4, dash: '7 8', label: '走向示意（该路未收录于公开路网）' },
-    ctx:     { color: '#ffffff', width: 2.0, dash: null },
-    ghost:   { color: '#c9c4b8', width: 1.6, dash: null },
+    drive:   { color: '#2A5750', width: 3.6, dash: null,  label: '包车／拼车（导航道路）' },
+    shuttle: { color: '#5C8A80', width: 3.0, dash: null,  label: '景区区间车／摆渡（导航道路）' },
+    hike:    { color: '#7FA090', width: 3.0, dash: '0.1 7', label: '徒步路线' },
+    stub:    { color: '#A8A79E', width: 1.6, dash: '2 6', label: '接驳示意（无公开路网）' },
+    schem:   { color: '#A8A79E', width: 2.4, dash: '7 8', label: '走向示意（该路未收录于公开路网）' },
+    ctx:     { color: '#E4E3DD', width: 2.0, dash: null },
+    ghost:   { color: '#CFCFC7', width: 1.6, dash: null },
   };
   /* 交通方式判定：阿禾公路、铁贾公路、白哈巴通行线都是车行，绝不能被画成徒步。
      kind 优先；kind 缺失时回退到名称里的关键词。 */
@@ -182,9 +182,9 @@ window.GeoMap = (function () {
     '2025-04-21-103139': ['hemu_village', 'xiaoshike_meilifeng'],
     '阿勒泰布尔津县-穿越-贾登峪-布奴阿拉安': ['jiadengyu', 'bulaan'],
     '2026-06-23-091425-喀纳斯三湾': ['shenxian_bay', 'wolong_bay'],
-    '喀纳斯吐鲁克岩画往返': ['turuk_rockart'],
+    '喀纳斯吐鲁克岩画往返': ['kanas_lakeside', 'yaze_lake', 'turuk_rockart'],
     '大美新疆白哈巴穿越到喀纳斯': ['baihaba', 'kanas_hub'],
-    '阿勒泰市-阿禾公路-禾木村': ['altay_city', 'hemu_village'],
+    '阿勒泰市-阿禾公路-禾木村': ['ahe_road'],
     '2025-02-25-145544': ['hemu_village'],
     '2026-07-17-白哈巴-喀纳斯': ['baihaba', 'kanas_hub'],
   };
@@ -213,7 +213,9 @@ window.GeoMap = (function () {
     if (/不采用/.test(String(t.status || ''))) return false;
     const ids = (plan.day_places || {})[did] || [];
     const need = TRACK_PLACES[t.id];
-    return need ? need.every(id => ids.indexOf(id) >= 0) : false;
+    /* 锚点是“这条轨迹的落点属于这一天”：命中任意一个即可（阿禾公路全天都在路上，
+       轨迹终点是禾木，但备选B 只到贾登峪，用单一终点判定会把它整条丢掉）。 */
+    return need ? need.some(id => ids.indexOf(id) >= 0) : false;
   }
   function planLegsRaw(planIds, scope, dayId) {
     const out = [];
@@ -233,7 +235,9 @@ window.GeoMap = (function () {
         (window.TRACKS ? TRACKS.tracks : []).forEach(t => {
           if (!trackAllowed(plan, did, t)) return;
           /* 同一天已有这份真实路段，就不再叠同一段实录 */
-          if (R.legs.some(l => l.day === d && sameCorridor(t.points, l.points))) return;
+          /* 与实录同源的 roads.js 路段（src=kml）本身就是这份 KML 重采样出来的，
+            不能拿它当重复依据，否则实录会被自己的副本挤掉。 */
+          if (R.legs.some(l => l.day === d && l.src !== 'kml' && sameCorridor(t.points, l.points))) return;
           const ad = t.adopted_points && t.adopted_points.length;
           if (String(t.day || '').indexOf(d) === 0 && t.points && t.points.length > 1
               && (ad || modeOf(t.kind, t.name) !== 'hike'))

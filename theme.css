@@ -33,11 +33,11 @@ body{ background:var(--paper); color:var(--ink); }
 .hero-cta button{ border-radius:var(--r-m); }
 
 /* ─ 卡片：统一圆角/边框/内距/悬停 ──────────────────────────────── */
-.fm,.guide-card,.off-thumb,.off-panel,.money-cell,.day-tile,.topic-card,.official-card,
+.fm,.off-thumb,.off-panel,.topic-card,.official-card,
 .duo-card,.kv-list,.journey-workspace,.map-module,.tbl-wrap,.dtable-wrap,.cmp,.days-tbl{
   border-radius:var(--r-l); border:1px solid var(--line); background:var(--surface);
 }
-.guide-card:hover,.day-tile:hover,.duo-card:hover{ box-shadow:var(--shadow-2);
+.duo-card:hover{ box-shadow:var(--shadow-2);
   border-color:var(--line-strong); transform:translateY(-2px); }
 
 /* ── 三方案差异表 ──────────────────────────────────────────────── */
@@ -83,26 +83,6 @@ table.cmp th.cur,table.cmp td.cur{ background:rgba(18,59,51,.045); }
 .dtable-wrap .dtable-note{ font-size:var(--fs-xs); color:var(--faint); padding:11px 14px;
   border-top:1px solid var(--line-soft); background:var(--sunken); }
 
-/* ── 费用总览：一条横带，发丝线分隔，不做六个盒子 ───────────────── */
-.money-grid{ display:grid; grid-template-columns:repeat(6,1fr); gap:0;
-  border:1px solid var(--line); border-radius:var(--r-l); overflow:hidden; background:var(--surface); }
-.money-cell{ padding:20px 22px; border-left:1px solid var(--line-soft); }
-.money-cell:first-child{ border-left:0; }
-.money-cell i{ display:block; font-style:normal; font-size:11.5px; color:var(--faint);
-  letter-spacing:.05em; }
-.money-cell b{ display:block; font-size:20px; font-weight:640; letter-spacing:-.022em;
-  margin:8px 0 5px; font-variant-numeric:tabular-nums; }
-.money-cell span{ display:block; font-size:12px; color:var(--muted); line-height:1.6; }
-@media (max-width:1160px){ .money-grid{ grid-template-columns:repeat(3,1fr); }
-  .money-cell:nth-child(3n+1){ border-left:0; }
-  .money-cell:nth-child(n+4){ border-top:1px solid var(--line-soft); } }
-@media (max-width:640px){ .money-grid{ grid-template-columns:repeat(2,1fr); }
-  .money-cell{ padding:16px; } .money-cell:nth-child(odd){ border-left:0; }
-  .money-cell:nth-child(n+3){ border-top:1px solid var(--line-soft); } }
-.money-foot{ display:flex; align-items:center; gap:14px; margin-top:16px; flex-wrap:wrap; }
-.money-foot p{ margin:0; font-size:var(--fs-sm); color:var(--muted); }
-.money-foot .btn-line{ margin-left:auto; }
-
 /* ── 出发前事项 ─────────────────────────────────────────────────── */
 .fm-list{ background:var(--surface); border:1px solid var(--line); border-radius:var(--r-l);
   overflow:hidden; }
@@ -111,19 +91,6 @@ table.cmp th.cur,table.cmp td.cur{ background:rgba(18,59,51,.045); }
 .fm-due{ font-size:12.5px; color:var(--gold); font-variant-numeric:tabular-nums; }
 .fm-who{ font-size:12.5px; color:var(--faint); }
 .fm-what{ font-size:var(--fs-body); color:var(--ink-2); line-height:1.65; }
-
-/* ── 攻略卡：图片＋标题，正文压到两行 ───────────────────────────── */
-.guide-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
-.guide-card{ padding:0; overflow:hidden; display:flex; flex-direction:column;
-  transition:transform .2s, box-shadow .2s, border-color .2s; }
-.guide-card img,.gc-ph{ width:100%; height:auto; aspect-ratio:16/10; object-fit:cover; display:block; }
-.gc-body{ padding:16px 18px 0; }
-.gc-k{ font-size:15.5px; font-weight:640; margin:0 0 6px; color:var(--ink); }
-.gc-c{ font-size:var(--fs-sm); color:var(--muted); line-height:1.66; margin:0;
-  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
-.guide-card .gc-go{ margin:0; padding:12px 18px 16px; font-size:12.5px; }
-@media (max-width:1000px){ .guide-grid{ grid-template-columns:repeat(2,1fr); } }
-@media (max-width:620px){ .guide-grid{ grid-template-columns:1fr; } }
 
 /* ─ 官方导览：缩略图 ＋ 提炼面板 ───────────────────────────────── */
 .off-thumbs{ display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:16px; }

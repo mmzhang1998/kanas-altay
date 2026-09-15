@@ -4,12 +4,12 @@
 (function () {
   /* 颜色只有一处定义：一律引用 GeoMap.STYLE（geomap.js）。
      同一套设计语言必须让 SVG／Leaflet／高德三套引擎对同一种走法给出同一个颜色。 */
-  const FALLBACK = { drive: '#b0742c', shuttle: '#2e7f6e', hike: '#4f8f5b', schem: '#8a948d',
-                     bus: '#4c7d8c', train: '#6f6a86', intent: '#9fb0a8' };
+  const FALLBACK = { drive: '#2A5750', shuttle: '#5C8A80', hike: '#7FA090', schem: '#A8A79E',
+                     bus: '#4c7d8c', train: '#6f6a86', intent: '#A8A79E' };
   const COLOR = new Proxy({}, {
     get: (_, k) => {
       const st = (window.GeoMap && GeoMap.STYLE) || {};
-      return (st[k] && st[k].color) || FALLBACK[k] || '#8a948d';
+      return (st[k] && st[k].color) || FALLBACK[k] || '#A8A79E';
     },
   });
   const BOUNDS = {
@@ -77,9 +77,10 @@
       tracks = day.tracks.map(track).filter(Boolean)
         .filter(t => GeoMap.trackAllowed(plan, day.id, t));
     } else {
-      tracks = (window.TRACKS ? TRACKS.tracks : []).filter(t =>
-        ((t.adopted_points || []).length || t.kind === 'drive' || /公路|通行|行车/.test(t.kind))
-        && (state.scope === 'full' || !/阿禾/.test(t.name)))
+      /* 实录不再用「有没有 adopted_points」当门槛——那会把未裁段的徒步实录整条丢掉。
+         现在只由两件事决定：方案/日期是否覆盖它（inPlan），以及是否属于阿禾走廊。 */
+      tracks = (window.TRACKS ? TRACKS.tracks : [])
+        .filter(t => state.scope === 'full' || !/阿禾/.test(t.name))
         .filter(inPlan);
     }
     if (state.focus) tracks = tracks.filter(t => t.id === state.focus);
@@ -129,7 +130,7 @@
         : ((c.planView === 'all') ? { color: GeoMap.PLAN_COLOR[l.plan] || GeoMap.STYLE.drive.color,
                                       width: 2.8, dash: null } : GeoMap.STYLE[l.mode]) || GeoMap.STYLE.drive;
       const ll = toGCJ(l.points);
-      L.polyline(ll, { color: '#ffffff', weight: st.width + 2.0, opacity: .92,
+      L.polyline(ll, { color: '#ffffff', weight: st.width + 1.8, opacity: .92,
                        interactive: false, lineCap: 'round', lineJoin: 'round' }).addTo(layers.lines);
       L.polyline(ll, { color: st.color, weight: st.width, opacity: .96, dashArray: st.dash,
                        lineCap: 'round', lineJoin: 'round' })
@@ -152,18 +153,27 @@
     c.tracks.forEach(t => {
       const g = (t.adopted_points && t.adopted_points.length) ? t.adopted_points : t.points;
       if (!g || g.length < 2) return;
-      if (HIDE[GeoMap.modeOf(t.kind, t.name)]) return;
-      const isHike = GeoMap.modeOf(t.kind, t.name) === 'hike';
+      const mm = GeoMap.modeOf(t.kind, t.name);
+      if (HIDE[mm]) return;
+      /* 交通方式只能有一种画法：走 GeoMap.STYLE 全量映射。
+         早先这里只判 hike / 非 hike 两种，区间车与摆渡被当成包车涂成琥珀色实线——
+         读者一眼分不出「包车」「区间车」「徒步」，这就是"区间车与徒步搞混"的根因。 */
+      const st = GeoMap.STYLE[mm] || GeoMap.STYLE.drive;
       const full = (t.adopted_points || []).length ? t.points : null;
       if (full && full.length > 1) {                       /* 完整轨迹压淡，采用段加粗：一眼看出"走哪段" */
-        L.polyline(toGCJ(full), { color: isHike ? COLOR.hike : COLOR.drive,
-          weight: 1.6, opacity: .22, interactive: false }).addTo(layers.lines);
+        L.polyline(toGCJ(full), { color: st.color, weight: 1.2, opacity: .20,
+          dashArray: st.dash, interactive: false }).addTo(layers.lines);
       }
       L.polyline(toGCJ(g), {
-        color: isHike ? COLOR.hike : COLOR.drive, weight: isHike ? 2.8 : 3.2,
-        opacity: .95, dashArray: isHike ? '1 7' : null, lineCap: 'round',
+        color: st.color, weight: st.width * 0.9, opacity: .96, dashArray: st.dash,
+        lineCap: 'round', lineJoin: 'round',
       }).bindTooltip(t.name + ' · ' + (t.distance || '') + ' km',
-        { sticky: true, className: 'tip-line' }).addTo(layers.lines);
+        { sticky: true, className: 'tip-line' })
+        .on('click', () => { if (window.__openLeg) window.__openLeg({
+          name: t.name, mode: mm, src: 'kml', km: t.distance,
+          gain: t.gain, loss: t.loss, elevation: t.elevation,
+          adoptedNote: t.adopted_note, fullKm: t.distance, day: t.day }); })
+        .addTo(layers.lines);
     });
     drawPins(c);
     const pts = [];
@@ -177,9 +187,10 @@
     (GeoMap.CAMP_IDS() || []).forEach(cid => {
       const p = TRIP.places.filter(x => x.id === cid)[0];
       if (!p || !p.coord || p.coord[0] == null) return;
-      L.marker(poiLL(p), { interactive: false, icon: L.divIcon({ className: 'camp-wrap',
-        html: '<i class="camp-dot" title="' + p.name + ' · 可选露营点"></i>', iconSize: [10, 10], iconAnchor: [-9, 5] }) })
+      L.marker(poiLL(p), { interactive: true, icon: L.divIcon({ className: 'camp-wrap',
+        html: '<i class="camp-dot" title="' + p.name + ' · 可选露营点"></i>', iconSize: [13, 12], iconAnchor: [-6, 6] }) })
         .bindTooltip(p.name + ' · 可选露营点', { direction: 'top', offset: [0, -6], className: 'tip-line' })
+        .on('click', () => openDrawer(p))
         .addTo(layers.camp);
     });
     const nr = TRIP.places.filter(x => x.id === 'naren')[0];

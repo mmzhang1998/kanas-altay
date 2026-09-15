@@ -14,14 +14,14 @@
 
   function renderBudget() {
     const b = TRIP.budget, calc = b.calculator;
-    document.title = '费用与重算｜我们的阿勒泰';
+    document.title = '费用预算｜我们的阿勒泰';
     const state = { nights: {}, x: { X1: '', X2: '', X3: '', X4: '' }, transfer: 'shuttle', food: 0 };
     calc.nights.forEach(n => { state.nights[n.night] = n.default; });
 
     $('#hero').innerHTML = '<div><p class="eyebrow">费用</p>'
-      + '<h1>先把确定的和没报价的分开</h1>'
+      + '<h1>已经确定的、和还没报价的分开看</h1>'
       + '<p class="verdict">三套情景都只是地面费用：不含任何一段包车与往返火车。'
-      + '未报价的四个变量（X1—X4）必须填真实询价结果，本页不会替你猜。</p></div>';
+      + '四段包车还没报价，要填真实询价结果，本页不会替你猜。</p></div>';
 
     function totals() {
       let stay = 0, camps = 0;
@@ -64,13 +64,13 @@
         + esc(sc.per_person) + '，差额全部来自你刚才拨动的开关。</p>';
     }
 
-    let c = sec2('四个待询价变量', '<div class="x-grid">' + b.quotes.map(q =>
+    let c = sec2('四段包车询价', '<div class="x-grid">' + b.quotes.map(q =>
       '<label class="xrow"><span><b>' + esc(q.label) + '</b><small>' + esc(q.ask) + '</small>'
       + '<em>锚点：' + esc(q.anchor) + '</em></span>'
       + '<input type="number" min="0" step="50" inputmode="numeric" placeholder="填入司机报价" data-x="' + q.var + '">'
       + '<i class="pending">未报价</i></label>').join('') + '</div>'
       + '<p class="rule">规则：整车按「一车总价」填，页面自动 ÷3 落到每人；未填的段落不计入合计，也不会被当成 0 元。</p>',
-      '待报价 · 拿到真实数字才计入');
+      '填上真实报价才计入');
 
     c += sec2('逐晚住宿开关', '<div class="night-grid">' + calc.nights.map(n => {
       const p = Trip.place(n.place);
@@ -97,7 +97,7 @@
       ['依据', r => esc(polishText(r.nature || ''))]]), '已确认');
     c += sec2('有历史价格，出行前需现场确认', rowTable(b.review, [['项目', 'item'], ['单价', 'unit_price'],
       ['三人合计', 'three_total'], ['每人', 'per_person'],
-      ['复核动作', r => '<span class="ask">' + esc(r.action || '') + '</span>']]), '需复核');
+      ['要确认的事', r => '<span class="ask">' + esc(r.action || '') + '</span>']]), '需确认');
     c += sec2('现在还不能定价的项目', rowTable(b.unknown, [['项目', 'item'], ['为什么先不定价', 'why'],
       ['量级参照', 'anchor'], ['询价动作', r => '<span class="ask">' + esc(r.ask || '') + '</span>']]), '待报价');
     c += sec2('三种情景', '<div class="scen-grid">' + b.scenarios_v4.map(s =>
@@ -108,7 +108,7 @@
       + '<p class="cav">' + esc(s.caveat) + '</p></article>').join('') + '</div>'
       + '<p class="rule">' + esc(b.scenario_warning) + '</p>', '情景');
     c += sec2('计算公式', '<p class="formula">' + esc(b.formula) + '</p>'
-      + '<ul class="detail-list">' + b.rules.map(r => '<li>' + esc(r) + '</li>').join('') + '</ul>', '口径');
+      + '<ul class="detail-list">' + b.rules.map(r => '<li>' + esc(r) + '</li>').join('') + '</ul>', '怎么算');
     $('#content').innerHTML = '<section class="detail-section"><h2>每天大概花多少</h2><div id="dayCost"></div></section>' + c;
 
     $$('[data-x]').forEach(i => i.addEventListener('input', e => {
@@ -128,10 +128,10 @@
     paint();
 
     $('#facts').innerHTML = '<h3>费用速查</h3>'
-      + '<div><small>票种基线</small>' + b.ticket_baseline.per_person + ' 元/人 · '
+      + '<div><small>门票基准</small>' + b.ticket_baseline.per_person + ' 元/人 · '
       + b.ticket_baseline.three_total + ' 元/三人</div>'
       + '<div><small>已含票内</small>' + esc(b.ticket_baseline.note) + '</div>'
-      + '<div><small>最大缺口</small>X3：贾登峪→白哈巴整车（无可靠成交）</div>'
+      + '<div><small>暂无报价</small>贾登峪→白哈巴整车（没有可靠成交价）</div>'
       + '<div><small>逐项待办</small><a href="tasks.html">15 项待办 →</a></div>'
       + '<div><small>回行程</small><a href="index.html">首页 →</a></div>';
   }
@@ -173,7 +173,7 @@
     $('#facts').innerHTML = '<h3>按人分工</h3>'
       + Object.keys(byOwner).map(k => '<div><small>' + esc(k) + '</small>'
         + byOwner[k].map(x => x.id).join(' · ') + '</div>').join('')
-      + '<div><small>合计</small>' + t.length + ' 项（上限 15）</div>'
+      + '<div><small>合计</small>' + t.length + ' 项</div>'
       + '<div><small>费用页</small><a href="budget.html">重算预算 →</a></div>'
       + '<div><small>回行程</small><a href="index.html">首页 →</a></div>';
   }

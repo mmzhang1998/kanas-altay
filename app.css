@@ -1,4 +1,4 @@
-:root{--ink:#17201e;--forest:#102b27;--paper:#f6f7f4;--white:#fff;--muted:#68716d;--line:#dce1dc;--gold:#d6a750;--gold2:#f0d59a;--river:#5e93a5;--hike:#d06b4e;--shuttle:#66845f;--shadow:0 22px 60px rgba(16,43,39,.12)}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.65 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}button,a{font:inherit}button{cursor:pointer}.site-header{height:72px;padding:0 max(24px,4vw);display:flex;align-items:center;gap:42px;position:sticky;top:0;z-index:50;background:#f6f7f4e8;backdrop-filter:blur(18px);border-bottom:1px solid #17201e17}.brand{text-decoration:none;font-weight:850}.brand span{display:block;font:700 10px/1 ui-monospace,monospace;letter-spacing:.18em;color:#64726c;margin-bottom:4px}.site-header nav{display:flex;gap:24px}.site-header nav a{text-decoration:none;color:#65706b;font-size:14px}.today-button{margin-left:auto;border:0;background:var(--forest);color:#fff;padding:10px 15px;border-radius:999px}.journey-shell{padding:64px max(24px,4vw) 30px;max-width:1640px;margin:auto}.journey-heading{display:grid;grid-template-columns:1.35fr .65fr;gap:60px;align-items:end;margin-bottom:30px}.eyebrow,.map-kicker{margin:0 0 8px;font:700 11px/1.2 ui-monospace,monospace;letter-spacing:.16em;text-transform:uppercase;color:#76807b}.journey-heading h1{margin:0;max-width:920px;font-size:clamp(42px,5.7vw,84px);line-height:1.02;letter-spacing:-.055em}.trip-facts{display:grid;grid-template-columns:repeat(2,1fr);border-top:1px solid var(--line)}.trip-facts span{padding:15px 0;border-bottom:1px solid var(--line);color:var(--muted);font-size:13px}.trip-facts b{font-size:24px;color:var(--forest);display:block}.journey-workspace{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(340px,.6fr);min-height:620px;background:#fff;border:1px solid var(--line);box-shadow:var(--shadow)}.map-card{min-width:0;display:flex;flex-direction:column}.map-toolbar{height:70px;padding:0 20px 0 24px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line)}.map-toolbar b{display:block;font-size:17px}.map-kicker{font-size:9px}.map-actions{display:flex;background:#eef1ed;padding:3px;border-radius:999px}.map-actions button{border:0;background:transparent;padding:7px 11px;border-radius:999px;color:#66706b;font-size:12px}.map-actions button.active{background:#fff;color:var(--forest);box-shadow:0 2px 10px #0001}.map-stage{height:550px;position:relative;overflow:hidden;background:linear-gradient(145deg,#e7ece7,#dfe7e4)}#routeMap{width:100%;height:100%;display:block}.map-bg{fill:#e6ebe6}.terrain-line{fill:none;stroke:#c9d5cf;stroke-width:1;opacity:.7}.route-line{fill:none;stroke-linecap:round;stroke-linejoin:round}.route-line.drive{stroke:var(--gold);stroke-width:5}.route-line.shuttle{stroke:var(--shuttle);stroke-width:5;stroke-dasharray:8 7}.route-line.hike{stroke:var(--hike);stroke-width:4;stroke-dasharray:3 7}.poi{cursor:pointer}.poi circle{stroke:#fff;stroke-width:3;filter:drop-shadow(0 4px 5px #18302933)}.poi text{font-size:12px;font-weight:750;paint-order:stroke;stroke:#eef2ee;stroke-width:4;fill:#26342f}.map-legend{position:absolute;left:18px;bottom:17px;display:flex;gap:14px;background:#102b27e8;color:#fff;padding:9px 12px;border-radius:6px;font-size:11px}.map-legend span:before{content:"";display:inline-block;width:17px;height:3px;margin-right:6px;vertical-align:middle;background:currentColor}.map-legend .drive{color:var(--gold)}.map-legend .shuttle{color:#9db394}.map-legend .hike{color:#ef8a6c}.map-legend .stay{color:#fff}.map-legend .stay:before{width:8px;height:8px;border-radius:50%}.map-note{position:absolute;right:16px;bottom:17px;background:#fffd;padding:7px 10px;border-radius:6px;color:#65706b;font-size:10px}.day-panel{padding:30px;background:var(--forest);color:#fff;display:flex;flex-direction:column}.panel-top{display:flex;justify-content:space-between}.panel-top .eyebrow{color:#9fb2aa}.panel-top button{border:0;background:transparent;color:#aebeb8;font-size:12px}.day-panel h2{font-size:30px;line-height:1.12;letter-spacing:-.035em;margin:18px 0 13px}.day-panel>p{color:#c3d0cb;margin:0 0 22px}.schedule-preview{border-top:1px solid #ffffff24}.schedule-item{display:grid;grid-template-columns:66px 1fr;gap:12px;padding:11px 0;border-bottom:1px solid #ffffff1d}.schedule-item time{color:var(--gold2);font:700 12px/1.6 ui-monospace,monospace}.schedule-item b{font-size:14px}.schedule-item small{display:block;color:#9fb2aa}.day-meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:18px}.day-meta span{font-size:11px;color:#c3d0cb;border:1px solid #ffffff25;padding:4px 7px;border-radius:99px}.primary-link{color:#fff;text-decoration:none;font-weight:750;margin-top:auto;padding-top:22px;display:flex;justify-content:space-between;border-top:1px solid #ffffff24}.date-rail{display:grid;grid-template-columns:repeat(9,1fr);gap:1px;margin-top:18px;background:var(--line);border:1px solid var(--line)}.date-chip{border:0;background:#fff;padding:14px 12px;text-align:left;min-height:86px}.date-chip small{display:block;color:#87908c}.date-chip b{display:block;margin:3px 0}.date-chip span{font-size:11px;color:#69736f;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.date-chip.active{background:var(--forest);color:#fff}.date-chip.active small,.date-chip.active span{color:#b9c8c2}.content-block{max-width:1540px;margin:auto;padding:90px max(24px,4vw)}.section-heading{display:flex;justify-content:space-between;align-items:end;gap:50px;margin-bottom:30px}.section-heading h2{font-size:clamp(34px,4.2vw,58px);line-height:1.03;letter-spacing:-.045em;margin:0}.section-heading>p{max-width:510px;color:var(--muted);margin:0}.day-feed{border-top:1px solid #cbd2cd}.day-card{display:grid;grid-template-columns:110px 1.25fr .85fr .85fr;gap:24px;padding:28px 0;border-bottom:1px solid #cbd2cd}.day-number small{display:block;color:var(--muted)}.day-number b{font-size:30px}.day-card h3{font-size:24px;margin:0 0 6px}.day-card p{margin:0;color:#5d6762}.day-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}.mini-link{border:1px solid #ccd4cf;background:#fff;text-decoration:none;color:var(--forest);padding:5px 8px;font-size:12px}.fact-list small{display:block;color:#87908c}.fact-list b{display:block;margin-bottom:10px}.risk-note{padding:13px;background:#efe5d2;color:#654d25;font-size:13px}.topics-block{max-width:none;background:var(--forest);color:#fff}.topics-block>.section-heading,.topics-block>.topic-tabs,.topics-block>.topic-feature,.topics-block>.topic-grid{max-width:1420px;margin-left:auto;margin-right:auto}.topics-block .eyebrow,.topics-block .section-heading>p{color:#aebeb8}.topic-tabs{display:flex;gap:7px;overflow:auto;padding-bottom:14px}.topic-tabs button{border:1px solid #ffffff27;background:transparent;color:#cad5d1;padding:8px 12px;border-radius:999px;white-space:nowrap}.topic-tabs button.active{background:var(--gold2);border-color:var(--gold2);color:#28352f}.topic-feature{display:grid;grid-template-columns:1.25fr .75fr;background:#fff;color:var(--ink);margin-top:18px}.topic-feature img{width:100%;height:370px;object-fit:cover}.topic-copy{padding:34px}.topic-copy h3{font-size:34px;line-height:1.1;margin:7px 0 12px}.topic-copy p{color:#5c6661}.rank-list{counter-reset:item;margin:24px 0;padding:0;list-style:none}.rank-list li{counter-increment:item;padding:10px 0;border-top:1px solid var(--line)}.rank-list li:before{content:counter(item,decimal-leading-zero);font:700 11px ui-monospace,monospace;color:#a2762b;margin-right:12px}.topic-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:14px}.topic-card{background:#1a3833;border:1px solid #ffffff13;padding:20px;text-decoration:none;color:#fff}.topic-card small{color:#9eb0aa}.topic-card h3{margin:8px 0;font-size:19px}.topic-card p{color:#bdcac5;font-size:14px}.official-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.official-card{background:#fff;border:1px solid var(--line);overflow:hidden}.official-thumb{height:180px;overflow:hidden;background:#e8ece8}.official-thumb img{width:100%;height:100%;object-fit:cover;transition:.3s}.official-card:hover img{transform:scale(1.03)}.official-card div:last-child{padding:17px}.official-card h3{margin:0}.official-card p{font-size:13px;color:var(--muted)}.official-card button{border:0;background:none;color:#8d651e;padding:0;font-weight:750}.plan-switcher{display:flex;gap:8px;margin-bottom:18px;overflow:auto}.plan-switcher button{border:1px solid var(--line);background:#fff;padding:10px 14px;white-space:nowrap}.plan-switcher button.active{background:var(--forest);color:#fff}.plan-detail{background:#fff;border:1px solid var(--line);padding:28px}.plan-summary{display:grid;grid-template-columns:.8fr 1.2fr;gap:40px}.plan-summary h3{font-size:34px;margin:0}.plan-days{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:22px}.plan-day{padding:12px;background:#f0f3ef;font-size:12px}.packing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.pack-card{background:#fff;border:1px solid var(--line);padding:22px}.pack-card h3{font-size:21px;margin:0 0 10px}.pack-card ul{padding-left:18px;color:#59635f}.pack-card li{margin:7px 0}footer{background:#0d211e;color:#fff;padding:34px max(24px,4vw);display:flex;justify-content:space-between;gap:30px}footer p{margin:0;color:#9fb2aa;max-width:760px}.dialog{position:fixed;inset:0;z-index:100;background:#102b27e6;display:grid;place-items:center;padding:25px}.dialog-card{background:#fff;max-width:1100px;max-height:90vh;overflow:auto;box-shadow:var(--shadow)}.dialog-card img{width:100%;display:block}.dialog-head{display:flex;justify-content:space-between;padding:18px 22px}.dialog-head button{border:0;background:#eef1ed;width:38px;height:38px;border-radius:50%}@media(max-width:1000px){.journey-heading{grid-template-columns:1fr}.journey-workspace{grid-template-columns:1fr}.map-stage{height:500px}.date-rail{grid-template-columns:repeat(4,1fr)}.day-card{grid-template-columns:90px 1fr 1fr}.day-card .risk-note{grid-column:2/4}.official-grid{grid-template-columns:repeat(2,1fr)}.topic-grid,.packing-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:680px){.site-header{height:64px;padding:0 16px}.site-header nav{display:none}.today-button{font-size:12px;padding:8px 10px}.journey-shell{padding:32px 14px 20px}.journey-heading{gap:26px}.journey-heading h1{font-size:44px}.trip-facts b{font-size:19px}.journey-workspace{display:block}.map-toolbar{padding:0 13px}.map-stage{height:48vh;min-height:340px;max-height:470px}.map-legend{left:10px;right:10px;bottom:10px;justify-content:space-between;gap:5px}.map-note{display:none}.day-panel{padding:24px 20px}.day-panel h2{font-size:27px}.date-rail{display:flex;overflow:auto}.date-chip{min-width:122px}.content-block{padding:68px 18px}.section-heading{display:block}.section-heading>p{margin-top:14px}.section-heading h2{font-size:40px}.day-card{grid-template-columns:64px 1fr}.day-card>.fact-list,.day-card>.risk-note{grid-column:2}.topic-feature{display:block}.topic-feature img{height:230px}.topic-copy{padding:24px}.topic-grid,.official-grid,.packing-grid{grid-template-columns:1fr}.plan-summary{grid-template-columns:1fr}.plan-days{grid-template-columns:repeat(2,1fr)}footer{display:block;padding:30px 18px}footer p{margin-top:10px}}
+:root{--ink:#17201e;--forest:#102b27;--paper:#f6f7f4;--white:#fff;--muted:#68716d;--line:#dce1dc;--gold:#A9743A;--gold2:#E6D2AE;--river:#5e93a5;--hike:#7FA090;--shuttle:#5C8A80;--shadow:0 22px 60px rgba(16,43,39,.12)}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.65 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}button,a{font:inherit}button{cursor:pointer}.site-header{height:72px;padding:0 max(24px,4vw);display:flex;align-items:center;gap:42px;position:sticky;top:0;z-index:50;background:#f6f7f4e8;backdrop-filter:blur(18px);border-bottom:1px solid #17201e17}.brand{text-decoration:none;font-weight:850}.brand span{display:block;font:700 10px/1 ui-monospace,monospace;letter-spacing:.18em;color:#64726c;margin-bottom:4px}.site-header nav{display:flex;gap:24px}.site-header nav a{text-decoration:none;color:#65706b;font-size:14px}.today-button{margin-left:auto;border:0;background:var(--forest);color:#fff;padding:10px 15px;border-radius:999px}.journey-shell{padding:64px max(24px,4vw) 30px;max-width:1640px;margin:auto}.journey-heading{display:grid;grid-template-columns:1.35fr .65fr;gap:60px;align-items:end;margin-bottom:30px}.eyebrow,.map-kicker{margin:0 0 8px;font:700 11px/1.2 ui-monospace,monospace;letter-spacing:.16em;text-transform:uppercase;color:#76807b}.journey-heading h1{margin:0;max-width:920px;font-size:clamp(42px,5.7vw,84px);line-height:1.02;letter-spacing:-.055em}.trip-facts{display:grid;grid-template-columns:repeat(2,1fr);border-top:1px solid var(--line)}.trip-facts span{padding:15px 0;border-bottom:1px solid var(--line);color:var(--muted);font-size:13px}.trip-facts b{font-size:24px;color:var(--forest);display:block}.journey-workspace{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(340px,.6fr);min-height:620px;background:#fff;border:1px solid var(--line);box-shadow:var(--shadow)}.map-card{min-width:0;display:flex;flex-direction:column}.map-toolbar{height:70px;padding:0 20px 0 24px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line)}.map-toolbar b{display:block;font-size:17px}.map-kicker{font-size:9px}.map-actions{display:flex;background:#eef1ed;padding:3px;border-radius:999px}.map-actions button{border:0;background:transparent;padding:7px 11px;border-radius:999px;color:#66706b;font-size:12px}.map-actions button.active{background:#fff;color:var(--forest);box-shadow:0 2px 10px #0001}.map-stage{height:550px;position:relative;overflow:hidden;background:#F1F1EF}#routeMap{width:100%;height:100%;display:block}.map-bg{fill:#F1F1EF}.terrain-line{fill:none;stroke:#c9d5cf;stroke-width:1;opacity:.7}.route-line{fill:none;stroke-linecap:round;stroke-linejoin:round}.route-line.drive{stroke:#2A5750;stroke-width:5}.route-line.shuttle{stroke:#5C8A80;stroke-width:5;stroke-dasharray:3 5}.route-line.hike{stroke:#7FA090;stroke-width:4;stroke-dasharray:1 6}.poi{cursor:pointer}.poi circle{stroke:#fff;stroke-width:3;filter:drop-shadow(0 4px 5px #18302933)}.poi text{font-size:12px;font-weight:750;paint-order:stroke;stroke:#eef2ee;stroke-width:4;fill:#26342f}.map-legend{position:absolute;left:18px;bottom:17px;display:flex;gap:14px;background:#fffffff2;color:#3E4642;padding:9px 12px;border-radius:6px;font-size:11px}.map-legend span:before{content:"";display:inline-block;width:17px;height:3px;margin-right:6px;vertical-align:middle;background:currentColor}.map-legend .drive{color:var(--gold)}.map-legend .shuttle{color:#9db394}.map-legend .hike{color:#ef8a6c}.map-legend .stay{color:#fff}.map-legend .stay:before{width:8px;height:8px;border-radius:50%}.map-note{position:absolute;right:16px;bottom:17px;background:#fffd;padding:7px 10px;border-radius:6px;color:#65706b;font-size:10px}.day-panel{padding:30px;background:var(--forest);color:#fff;display:flex;flex-direction:column}.panel-top{display:flex;justify-content:space-between}.panel-top .eyebrow{color:#9fb2aa}.panel-top button{border:0;background:transparent;color:#aebeb8;font-size:12px}.day-panel h2{font-size:30px;line-height:1.12;letter-spacing:-.035em;margin:18px 0 13px}.day-panel>p{color:#c3d0cb;margin:0 0 22px}.schedule-preview{border-top:1px solid #ffffff24}.schedule-item{display:grid;grid-template-columns:66px 1fr;gap:12px;padding:11px 0;border-bottom:1px solid #ffffff1d}.schedule-item time{color:var(--gold2);font:700 12px/1.6 ui-monospace,monospace}.schedule-item b{font-size:14px}.schedule-item small{display:block;color:#9fb2aa}.day-meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:18px}.day-meta span{font-size:11px;color:#c3d0cb;border:1px solid #ffffff25;padding:4px 7px;border-radius:99px}.primary-link{color:#fff;text-decoration:none;font-weight:750;margin-top:auto;padding-top:22px;display:flex;justify-content:space-between;border-top:1px solid #ffffff24}.date-rail{display:grid;grid-template-columns:repeat(9,1fr);gap:1px;margin-top:18px;background:var(--line);border:1px solid var(--line)}.date-chip{border:0;background:#fff;padding:14px 12px;text-align:left;min-height:86px}.date-chip small{display:block;color:#87908c}.date-chip b{display:block;margin:3px 0}.date-chip span{font-size:11px;color:#69736f;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.date-chip.active{background:var(--forest);color:#fff}.date-chip.active small,.date-chip.active span{color:#b9c8c2}.content-block{max-width:1540px;margin:auto;padding:90px max(24px,4vw)}.section-heading{display:flex;justify-content:space-between;align-items:end;gap:50px;margin-bottom:30px}.section-heading h2{font-size:clamp(34px,4.2vw,58px);line-height:1.03;letter-spacing:-.045em;margin:0}.section-heading>p{max-width:510px;color:var(--muted);margin:0}.day-feed{border-top:1px solid #cbd2cd}.day-card{display:grid;grid-template-columns:110px 1.25fr .85fr .85fr;gap:24px;padding:28px 0;border-bottom:1px solid #cbd2cd}.day-number small{display:block;color:var(--muted)}.day-number b{font-size:30px}.day-card h3{font-size:24px;margin:0 0 6px}.day-card p{margin:0;color:#5d6762}.day-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}.mini-link{border:1px solid #ccd4cf;background:#fff;text-decoration:none;color:var(--forest);padding:5px 8px;font-size:12px}.fact-list small{display:block;color:#87908c}.fact-list b{display:block;margin-bottom:10px}.risk-note{padding:13px;background:#efe5d2;color:#654d25;font-size:13px}.topics-block{max-width:none;background:var(--forest);color:#fff}.topics-block>.section-heading,.topics-block>.topic-tabs,.topics-block>.topic-feature,.topics-block>.topic-grid{max-width:1420px;margin-left:auto;margin-right:auto}.topics-block .eyebrow,.topics-block .section-heading>p{color:#aebeb8}.topic-tabs{display:flex;gap:7px;overflow:auto;padding-bottom:14px}.topic-tabs button{border:1px solid #ffffff27;background:transparent;color:#cad5d1;padding:8px 12px;border-radius:999px;white-space:nowrap}.topic-tabs button.active{background:var(--gold2);border-color:var(--gold2);color:#28352f}.topic-feature{display:grid;grid-template-columns:1.25fr .75fr;background:#fff;color:var(--ink);margin-top:18px}.topic-feature img{width:100%;height:370px;object-fit:cover}.topic-copy{padding:34px}.topic-copy h3{font-size:34px;line-height:1.1;margin:7px 0 12px}.topic-copy p{color:#5c6661}.rank-list{counter-reset:item;margin:24px 0;padding:0;list-style:none}.rank-list li{counter-increment:item;padding:10px 0;border-top:1px solid var(--line)}.rank-list li:before{content:counter(item,decimal-leading-zero);font:700 11px ui-monospace,monospace;color:#a2762b;margin-right:12px}.topic-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:14px}.topic-card{background:#1a3833;border:1px solid #ffffff13;padding:20px;text-decoration:none;color:#fff}.topic-card small{color:#9eb0aa}.topic-card h3{margin:8px 0;font-size:19px}.topic-card p{color:#bdcac5;font-size:14px}.official-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.official-card{background:#fff;border:1px solid var(--line);overflow:hidden}.official-thumb{height:180px;overflow:hidden;background:#e8ece8}.official-thumb img{width:100%;height:100%;object-fit:cover;transition:.3s}.official-card:hover img{transform:scale(1.03)}.official-card div:last-child{padding:17px}.official-card h3{margin:0}.official-card p{font-size:13px;color:var(--muted)}.official-card button{border:0;background:none;color:#8d651e;padding:0;font-weight:750}.plan-switcher{display:flex;gap:8px;margin-bottom:18px;overflow:auto}.plan-switcher button{border:1px solid var(--line);background:#fff;padding:10px 14px;white-space:nowrap}.plan-switcher button.active{background:var(--forest);color:#fff}.plan-detail{background:#fff;border:1px solid var(--line);padding:28px}.plan-summary{display:grid;grid-template-columns:.8fr 1.2fr;gap:40px}.plan-summary h3{font-size:34px;margin:0}.plan-days{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:22px}.plan-day{padding:12px;background:#f0f3ef;font-size:12px}.packing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.pack-card{background:#fff;border:1px solid var(--line);padding:22px}.pack-card h3{font-size:21px;margin:0 0 10px}.pack-card ul{padding-left:18px;color:#59635f}.pack-card li{margin:7px 0}footer{background:#0d211e;color:#fff;padding:34px max(24px,4vw);display:flex;justify-content:space-between;gap:30px}footer p{margin:0;color:#9fb2aa;max-width:760px}.dialog{position:fixed;inset:0;z-index:100;background:#102b27e6;display:grid;place-items:center;padding:25px}.dialog-card{background:#fff;max-width:1100px;max-height:90vh;overflow:auto;box-shadow:var(--shadow)}.dialog-card img{width:100%;display:block}.dialog-head{display:flex;justify-content:space-between;padding:18px 22px}.dialog-head button{border:0;background:#eef1ed;width:38px;height:38px;border-radius:50%}@media(max-width:1000px){.journey-heading{grid-template-columns:1fr}.journey-workspace{grid-template-columns:1fr}.map-stage{height:500px}.date-rail{grid-template-columns:repeat(4,1fr)}.day-card{grid-template-columns:90px 1fr 1fr}.day-card .risk-note{grid-column:2/4}.official-grid{grid-template-columns:repeat(2,1fr)}.topic-grid,.packing-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:680px){.site-header{height:64px;padding:0 16px}.site-header nav{display:none}.today-button{font-size:12px;padding:8px 10px}.journey-shell{padding:32px 14px 20px}.journey-heading{gap:26px}.journey-heading h1{font-size:44px}.trip-facts b{font-size:19px}.journey-workspace{display:block}.map-toolbar{padding:0 13px}.map-stage{height:48vh;min-height:340px;max-height:470px}.map-legend{left:10px;right:10px;bottom:10px;justify-content:space-between;gap:5px}.map-note{display:none}.day-panel{padding:24px 20px}.day-panel h2{font-size:27px}.date-rail{display:flex;overflow:auto}.date-chip{min-width:122px}.content-block{padding:68px 18px}.section-heading{display:block}.section-heading>p{margin-top:14px}.section-heading h2{font-size:40px}.day-card{grid-template-columns:64px 1fr}.day-card>.fact-list,.day-card>.risk-note{grid-column:2}.topic-feature{display:block}.topic-feature img{height:230px}.topic-copy{padding:24px}.topic-grid,.official-grid,.packing-grid{grid-template-columns:1fr}.plan-summary{grid-template-columns:1fr}.plan-days{grid-template-columns:repeat(2,1fr)}footer{display:block;padding:30px 18px}footer p{margin-top:10px}}
 
 /* ── 地图线型与示意走向、导览查看器、话题与原话、方案差异 ── */
 :root{--bus:#4c7d8c;--train:#6f6a86;--intent:#a9b4ad;--quote:#9a6b20;--quote2:#fbf1dd}
@@ -78,7 +78,7 @@
 .amap-dot{display:block;width:10px;height:10px;border-radius:50%;background:#d6a750;border:2px solid #fff;box-shadow:0 1px 4px #0004}
 .amap-dot.stay{background:#102b27}
 body[data-map="amap"] #routeMap{display:none}
-body[data-map="amap"] .map-stage{background:#e9ede9}
+body[data-map="amap"] .map-stage{background:#F2F2F0}
 
 /* 图片加载失败的占位：保持原有格子尺寸，避免整版布局跳动 */
 .img-fallback{background:#123b34;color:#8fa79f;border-radius:8px;min-height:120px;display:flex;
@@ -87,14 +87,22 @@ body[data-map="amap"] .map-stage{background:#e9ede9}
 
 /* ── 真地图层：Leaflet + 灰底瓦片调色 + 图钉 + 抽屉（app.js 的 SVG 只在瓦片不可达时出现） ── */
 .map-stage{height:720px}
-#leafmap{position:absolute;inset:0;z-index:2;display:none;background:#EDEFEA}
+#leafmap{position:absolute;inset:0;z-index:2;display:none;background:#F2F2F0}
 body[data-map="leaflet"] #leafmap{display:block}
+/* 瓦片不可达而退回 SVG 时，Leaflet 容器必须彻底让位（容器是 inline display:block，这里需要 !important） */
+body[data-map="svg"] #leafmap{display:none !important}
 body[data-map="leaflet"] #routeMap{display:none}
-body[data-map="leaflet"] .map-stage{background:#EDEFEA}
-/* 底图是给路线当背景的，不是主角：压掉瓦片自带的彩色饱和度与重线条，
-   让行程线浮在图上面。色相不动（之前 hue-rotate 把水画成了粉色）。 */
-#leafmap .leaflet-tile-pane{filter:saturate(.82) brightness(1.04) contrast(1.01)}
-#leafmap .leaflet-container{background:#EDEFEA;font:inherit}
+body[data-map="leaflet"] .map-stage{background:#F2F2F0}
+/* 底图是给路线当背景的，不是主角：压到近乎中性灰，让深墨绿行程线浮在图上面。
+   只用饱和度／明度，不做色相旋转——之前 hue-rotate 把湖水画成了粉色。
+   这一档同时把高德瓦片的暖棕国境线降到接近中性灰，不再与路线撞色；
+   山体与景区的深灰晕染因为是低饱和，三通道同值，仍然保留。 */
+#leafmap .leaflet-tile-pane{filter:saturate(.06) contrast(.88) brightness(1.20)}
+
+#leafmap .leaflet-container{background:#F2F2F0;font:inherit}
+/* 高德引擎的瓦片在 .amap-layers（canvas）里，不受上面那条 leaflet 规则影响。
+   同一套去色参数，保证两套引擎打开是同一个灰白底，不会一换引擎就退回暖色。 */
+body[data-map="amap"] #leafmap .amap-layers{filter:saturate(.06) contrast(.88) brightness(1.20)}
 #leafmap .leaflet-control-zoom{border:1px solid var(--line);box-shadow:0 4px 14px #17352d18;border-radius:8px;overflow:hidden}
 #leafmap .leaflet-control-zoom a{width:34px;height:34px;line-height:34px;color:#20443c;background:#fffffff2;border-bottom:1px solid var(--line)}
 #leafmap .leaflet-control-zoom a:last-child{border-bottom:0}
@@ -146,14 +154,15 @@ body[data-map="leaflet"] .map-stage{background:#EDEFEA}
 
 /* ════════════════════════════════════════════════════════════════════
    视觉系统：编辑型户外产品，克制的信息层级
-   —— 暖纸底、发丝线、大留白、克制的深墨绿与秋叶金；地图用真实地理而非装饰纹样
+   —— 灰白底、发丝线、大留白、深墨绿主色与秋叶金点缀；地图用真实地理而非装饰纹样
    ════════════════════════════════════════════════════════════════════ */
 :root{
   --paper:#FAF9F6; --surface:#FFFFFF; --ink:#181D1A; --ink-2:#3E4642; --muted:#78807B;
   --line:rgba(24,29,26,.10); --line-soft:rgba(24,29,26,.06);
   --pine:#123B33; --pine-2:#1C5247; --gold:#B9822F; --teal:#2E7F6E; --amber:#B0742C;
-  --map-bg:#F3F2EC; --water:#CBDFDA; --water-edge:#B7D2CB;
-  --r-s:10px; --r-m:10px; --r-l:10px;
+  --map-bg:#F2F2F0; --water:#DCE3E2; --water-edge:#C6D2D0;
+  --map-drive:#2A5750; --map-shuttle:#5C8A80; --map-hike:#7FA090; --map-camp:#C0A15C;
+  --r-s:10px; --r-m:16px; --r-l:22px;
   --shadow-1:0 1px 2px rgba(18,29,25,.05), 0 6px 20px rgba(18,29,25,.06);
   --shadow-2:0 2px 6px rgba(18,29,25,.06), 0 18px 44px rgba(18,29,25,.10);
 }
@@ -203,7 +212,7 @@ a{ color:inherit; }
 .gm-bg{ fill:var(--map-bg); }
 .gm-water{ fill:var(--water); stroke:var(--water-edge); stroke-width:.7; }
 .gm-water-leaf{ fill:var(--water); stroke:var(--water-edge); stroke-width:1; }
-.gm-ctx-casing{ fill:none; stroke:#E6E3D9; stroke-width:2.6; stroke-linecap:round; }
+.gm-ctx-casing{ fill:none; stroke:#E4E5E1; stroke-width:2.6; stroke-linecap:round; }
 .gm-ctx{ fill:none; stroke:#FFFFFF; stroke-width:1.6; stroke-linecap:round; }
 .gm-casing{ fill:none; stroke:#FFFFFF; stroke-width:5.2; stroke-linecap:round; stroke-linejoin:round; opacity:.95; }
 .gm-casing.ghost{ stroke-width:2.8; opacity:.7; }
@@ -215,8 +224,8 @@ a{ color:inherit; }
 .gm-pin .gm-pin-core{ }
 .gm-pin.sight .gm-pin-ring{ stroke:var(--gold); }   .gm-pin.sight .gm-pin-core{ fill:var(--gold); }
 .gm-pin.road  .gm-pin-ring{ stroke:var(--amber); }  .gm-pin.road  .gm-pin-core{ fill:var(--amber); }
-.gm-pin.hub   .gm-pin-ring{ stroke:var(--teal); }   .gm-pin.hub   .gm-pin-core{ fill:var(--teal); }
-.gm-pin.stay  .gm-pin-ring{ stroke:var(--pine); fill:var(--pine); }
+.gm-pin.hub   .gm-pin-ring{ stroke:var(--map-shuttle); }   .gm-pin.hub   .gm-pin-core{ fill:var(--map-shuttle); }
+.gm-pin.stay  .gm-pin-ring{ stroke:var(--map-drive); fill:var(--map-drive); }
 .gm-pin.stay  .gm-pin-core{ fill:#fff; }
 .gm-pin:hover .gm-pin-ring{ stroke-width:3.2; }
 .gm-label{ font-size:11.5px; font-weight:600; fill:#20302A; }
@@ -225,8 +234,8 @@ a{ color:inherit; }
 .gpin{ display:block; width:18px; height:18px; border-radius:50%; background:#fff;
   box-shadow:0 1px 3px rgba(18,29,25,.2); position:relative; }
 .gpin b{ position:absolute; inset:5px; border-radius:50%; background:var(--gold); }
-.gpin.road b{ background:var(--amber); } .gpin.hub b{ background:var(--teal); }
-.gpin.stay{ background:var(--pine); } .gpin.stay b{ background:#fff; }
+.gpin.road b{ background:var(--amber); } .gpin.hub b{ background:var(--map-shuttle); }
+.gpin.stay{ background:var(--map-drive); } .gpin.stay b{ background:#fff; }
 .leaflet-tooltip.tip-name{ background:transparent; border:none; box-shadow:none; color:#20302A;
   font-weight:600; font-size:11.5px; text-shadow:0 0 3px #FBFAF7,0 0 3px #FBFAF7,0 0 6px #FBFAF7; }
 .leaflet-tooltip.tip-name::before{ display:none; }
@@ -238,11 +247,11 @@ a{ color:inherit; }
   border-top:1px solid var(--line-soft); background:var(--surface); }
 .map-legend span{ display:inline-flex; align-items:center; gap:7px; font-size:12px; color:var(--ink-2); }
 .map-legend span i{ width:18px; height:0; border-top:3px solid var(--muted); border-radius:2px; }
-.map-legend .lg-drive i{ border-color:var(--amber); }
-.map-legend .lg-shuttle i{ border-color:var(--teal); }
-.map-legend .lg-hike i{ border-top-style:dotted; border-color:#4F8F5B; }
-.map-legend .lg-stub i{ border-top:2px dotted #9AA79F; }
-.map-legend .lg-stay i{ width:10px; height:10px; border:none; border-radius:50%; background:var(--pine); }
+.map-legend .lg-drive i{ border-color:var(--map-drive); }
+.map-legend .lg-shuttle i{ border-color:var(--map-shuttle); }
+.map-legend .lg-hike i{ border-top-style:dotted; border-color:var(--map-hike); }
+.map-legend .lg-stub i{ border-top:2px dotted #A8A79E; }
+.map-legend .lg-stay i{ width:10px; height:10px; border:none; border-radius:50%; background:var(--map-drive); }
 
 /* 日程卡：白卡 + 发丝线 + 悬停轻抬 */
 .day-card,.day-row{ background:var(--surface); border:1px solid var(--line); border-radius:var(--r-m);
@@ -342,7 +351,20 @@ body[data-map="amap"] #routeMap{ display:none; }
 .map-note{ position:absolute; right:12px; bottom:44px; z-index:500; max-width:46%;
   background:rgba(255,255,255,.92); border:1px solid var(--line-soft); border-radius:10px;
   padding:7px 10px; color:var(--muted); font-size:11px; line-height:1.55; }
-@media (max-width:680px){ .map-note{ display:none; } .map-legend{ font-size:10.5px; gap:8px 12px; } }
+@media (max-width:680px){
+  .map-note{ display:none; }
+  /* 图例在窄屏必须能换行且不压住地图：横向排满一行就折到下一行 */
+  .map-legend{ font-size:10.5px; gap:8px 12px; flex-wrap:wrap; padding:9px 12px; }
+  .map-legend button{ gap:5px; }
+  .map-legend button i{ width:16px; }
+  /* 方案按钮组：窄屏横向滚动，不折行、不溢出 */
+  .hero-cta{ overflow-x:auto; }
+  #planBtns{ flex-wrap:nowrap; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; padding-bottom:2px; }
+  #planBtns::-webkit-scrollbar{ display:none; }
+  /* 地图里的方案名与范围按钮收窄，避免盖满画幅 */
+  .map-overlay .scope-switch button{ font-size:11.5px; padding:5px 10px; }
+  .map-overlay .map-scale-note{ display:none; }
+}
 
 /* ══ 质感：克制、精确、留白 ═ */
 body{ background:#FBFAF8; }
@@ -371,20 +393,22 @@ body::before{ content:""; position:fixed; inset:0 0 auto 0; height:520px; pointe
 .day-card{ border-radius:8px; }
 .day-number b,.day-date{ font-size:20px; font-weight:640; }
 .content-block h2,.section-heading h2,.plan-compare h2{ font-weight:640; letter-spacing:-.025em; }
-.topic-band,.topics-dark{ border-radius:8px; }
+.topic-band,.topics-dark{ border-radius:20px; }
 .topic-card{ border-radius:8px; }
 .official-card{ border-radius:8px; }
 .official-thumb{ height:160px; }
 .pack-card{ border-radius:8px; }
-.plan-detail{ border-radius:8px; }
+.plan-detail{ border-radius:16px; }
 td{ font-size:14.5px; }
 th{ font:600 12px/1.5 -apple-system,"PingFang SC",sans-serif; letter-spacing:.06em; text-transform:none; }
 footer{ background:#0E211C; }
 @media (max-width:680px){ .journey-shell{ padding-top:40px; } .hero-cta a{ padding:11px 18px; } }
 
-/* ══ 首页信息架构与质感 ═
-   圆角统一收小：卡片 8、模块 10、按钮保留胶囊；标题改为"中文小标 + 大标题 + 一句说明" */
+/* ══ 首页信息架构与质感 
+   圆角统一收小：卡片 6 / 模块 8 / 大模块 10；按钮保留胶囊。
+   标题结构固定为"中文小标 + 大标题 + 一句说明"。 */
 :root{ --r-s:6px; --r-m:8px; --r-l:10px; }
+
 .journey-workspace,.map-module,.day-card,.topic-card,.official-card,.pc-card,.plan-detail,
 .pack-card,.dialog-card,.quote,.shot,.hike-card,.leg{ border-radius:var(--r-m); }
 .map-stage{ border-radius:0; }
@@ -607,8 +631,9 @@ footer{ background:#0E211C; }
 .gm-leglabel{ font-size:10.5px; fill:#7A8480; }
 .leg-label{ font:500 10.5px/1.4 -apple-system,"PingFang SC",sans-serif; color:#7A8480;
   text-shadow:0 0 3px #FBFAF7,0 0 3px #FBFAF7; white-space:nowrap; }
-.gm-camp-dot,.camp-dot{ display:block; width:10px; height:10px; border-radius:50%;
-  background:#2E7F6E; border:2px solid #fff; box-shadow:0 1px 3px rgba(18,29,25,.3); }
+.gm-camp-dot,.camp-dot{ display:block; width:13px; height:12px; border:0; border-radius:0;
+  background:var(--map-camp); clip-path:polygon(50% 0%,100% 100%,0% 100%);
+  filter:drop-shadow(0 0 1.5px #fff) drop-shadow(0 1px 2px rgba(18,29,25,.34)); }
 .gm-pin.ghost-pin .gm-pin-ring{ stroke:#8A948D; }
 .gm-pin.ghost-pin .gm-pin-core{ fill:#8A948D; }
 .gm-name.ghost{ color:#8A948D; font-size:11.5px; margin-left:6px; white-space:nowrap; }
@@ -738,7 +763,8 @@ footer{ display:none !important; }
   .offp-grid{ grid-template-columns:1fr; }
   table.cmp td, table.days-tbl td{ font-size:12px; padding:8px 9px; }
   .hero h1{ font-size:34px; }
-  .map-stage{ height:auto; aspect-ratio:1.25; min-height:250px; }
+  /* 地图是手机端的主角：给足竖向空间，不用固定宽高比把画幅压成一条 */
+  .map-stage{ height:62vh; min-height:400px; max-height:560px; }
   .day-strip{ grid-template-columns:repeat(3,1fr); }
 }
 @media (max-width:560px){ .guide-grid{ grid-template-columns:1fr; } .off-thumbs{ grid-template-columns:1fr 1fr; } }
@@ -773,13 +799,19 @@ footer{ display:none !important; }
 
 /* ══ 删右下角标注；图例补线型与点型示例 ══ */
 #mapNote{ display:none !important; }
-.map-legend button i{ width:20px; height:0; border-top:3px solid #B0742C; border-radius:2px; }
-.map-legend .lg-drive i{ border-color:#B0742C; }
-.map-legend .lg-shuttle i{ border-color:#2E7F6E; }
-.map-legend .lg-hike i{ border-top-style:dotted; border-color:#4F8F5B; }
-.map-legend .lg-schem i{ border-top:2px dotted #8A948D; }
-.map-legend .lg-stay i{ width:10px; height:10px; border:0; border-radius:50%; background:#123B33; }
-.map-legend .lg-camp i{ width:10px; height:10px; border:0; border-radius:50%; background:#2E7F6E; }
+.lg-camp-item{ display:inline-flex; align-items:center; gap:7px; font-size:12px; color:var(--ink-2); }
+/* 露营点：暖金帐篷。与过夜点圆钉区分，一眼能认出"这里能扎营" */
+.gm-camp{ fill:var(--map-camp); stroke:#fff; stroke-width:1.3; stroke-linejoin:round; }
+.map-legend .lg-camp i{ width:12px; height:11px; border:0; border-radius:0; background:var(--map-camp);
+  clip-path:polygon(50% 0%,100% 100%,0% 100%); }
+.camp-wrap{ background:none; border:none; }
+.camp-dot{ width:13px; height:12px; display:block; }
+.map-legend button i{ width:20px; height:0; border-top:3px solid var(--map-drive); border-radius:2px; }
+.map-legend .lg-drive i{ border-color:var(--map-drive); }
+.map-legend .lg-shuttle i{ border-color:var(--map-shuttle); }
+.map-legend .lg-hike i{ border-top-style:dotted; border-color:var(--map-hike); }
+.map-legend .lg-schem i{ border-top:2px dotted #A8A79E; }
+.map-legend .lg-stay i{ width:10px; height:10px; border:0; border-radius:50%; background:var(--map-drive); }
 
 /* ══ 攻略卡图片＋标题；官方导览分栏；方案页比例 ═ */
 .guide-card{ padding:0; overflow:hidden; display:flex; flex-direction:column; }
@@ -883,6 +915,53 @@ footer{ display:none !important; }
 @media (max-width:760px){ .fm-list a{ grid-template-columns:96px minmax(0,1fr) 20px; }
   .fm-who{ display:none; } }
 
+.day-tiles{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+.day-tile{ display:flex; flex-direction:column; gap:8px; background:#fff; text-decoration:none;
+  border:1px solid rgba(24,29,26,.09); border-radius:10px; padding:14px 16px 12px; color:var(--ink);
+  transition:border-color .18s, box-shadow .18s, transform .18s; }
+.day-tile:hover{ border-color:rgba(18,59,51,.28); box-shadow:0 10px 26px rgba(18,29,25,.07);
+  transform:translateY(-1px); }
+.day-tile header{ display:flex; align-items:baseline; gap:8px; }
+.day-tile header b{ font-size:15px; font-weight:660; font-variant-numeric:tabular-nums; }
+.day-tile header span{ font-size:12px; color:#98A19C; }
+.dt-head{ margin:0; font-size:13.5px; line-height:1.65; color:var(--ink-2);
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.dt-figs{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.dt-figs div{ background:#FAF9F5; border:1px solid var(--line-soft); border-radius:8px; padding:7px 9px; }
+.dt-figs i{ display:block; font-style:normal; font-size:11px; color:#98A19C; }
+.dt-figs span{ font-size:12px; color:var(--ink-2); }
+.dt-tags{ display:flex; flex-wrap:wrap; gap:6px; }
+.dt-tags span{ font-size:11.5px; color:#5C6661; background:#F4F3EC; border-radius:999px; padding:3px 9px; }
+.day-tile footer{ display:flex; align-items:baseline; gap:10px; margin-top:auto; padding-top:8px;
+  border-top:1px solid var(--line-soft); }
+.dt-cut{ flex:1; min-width:0; font-size:11.5px; color:#98A19C;
+  display:-webkit-box; -webkit-line-clamp:1; -webkit-box-orient:vertical; overflow:hidden; }
+.day-tile footer em{ font-style:normal; font-size:12.5px; font-weight:600; color:var(--pine); }
+@media (max-width:1000px){ .day-tiles{ grid-template-columns:1fr 1fr; } }
+@media (max-width:620px){ .day-tiles{ grid-template-columns:1fr; } }
+
+/* 6. 费用：六个关键数字 + 与日程同日的按天表 */
+.money-grid{ display:grid; grid-template-columns:repeat(6,1fr); gap:1px; background:var(--line-soft);
+  border:1px solid rgba(24,29,26,.09); border-radius:10px; overflow:hidden; }
+.money-cell{ background:#fff; padding:14px 16px; }
+.money-cell i{ display:block; font-style:normal; font-size:11.5px; color:#98A19C; letter-spacing:.02em; }
+.money-cell b{ display:block; font-size:20px; font-weight:650; letter-spacing:-.02em; margin:4px 0 3px;
+  font-variant-numeric:tabular-nums; color:var(--ink); }
+.money-cell span{ font-size:12px; color:#78807B; line-height:1.5; }
+.md-head{ display:flex; align-items:baseline; gap:12px; margin:18px 0 8px; }
+.md-head b{ font-size:15px; font-weight:640; }
+.md-head span{ font-size:12.5px; color:#98A19C; }
+.md-head .btn-line{ margin-left:auto; }
+.cost-tbl th.num, .cost-tbl td.num, .cost-tbl td.dc-num{ text-align:right;
+  font-variant-numeric:tabular-nums; }
+.dc-w{ display:block; font-size:11px; color:#98A19C; margin-top:2px; }
+.cost-tbl td b{ font-weight:640; }
+.dc-quote{ font-style:normal; font-size:12px; color:#8A6A2F; background:#FBF6EC;
+  border:1px solid rgba(185,130,47,.22); border-radius:999px; padding:2px 9px; }
+@media (max-width:1000px){ .money-grid{ grid-template-columns:repeat(3,1fr); } }
+@media (max-width:560px){ .money-grid{ grid-template-columns:1fr 1fr; } }
+
+
 /* 8. 地图线路抽屉：里程/预计/方式三格 + 来源与估价 */
 .leg-figs{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:12px 0 10px; }
 .leg-figs div{ background:#F7F6F1; border:1px solid var(--line-soft); border-radius:8px; padding:9px 11px; }
@@ -939,3 +1018,13 @@ footer{ display:none !important; }
 @media (max-width:1000px){ .spend-strip{ grid-template-columns:repeat(5,1fr); } }
 @media (max-width:620px){ .spend-strip{ grid-template-columns:repeat(3,1fr); } }
 .dtable tbody tr.flash{ background:#FBF6EC; }
+
+/* ── 手机端地图标记：图钉与常驻标签一起收一档，缓解叠压 ───────────── */
+@media (max-width:680px){
+  .gpin{ width:18px; height:18px; }
+  .gpin-wrap{ }
+  .leaflet-tooltip.tip-name.tip-perm{ font-size:10.5px; padding:2px 6px; }
+  .leaflet-tooltip.tip-name{ font-size:10.5px; }
+  .map-drawer{ max-height:56%; }
+  .drawer-in h3{ font-size:20px; }
+}

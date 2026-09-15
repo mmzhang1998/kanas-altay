@@ -5,9 +5,16 @@
 (function () {
   const state = { day: 'all', scope: 'full', focus: null, map: null, ov: [], cache: {} };
   const place = id => TRIP.places.filter(x => x.id === id)[0];
-  const CORIDOR = { altay_city: 1, back_to_altay: 1, ahe_road: 1 };
   const CORRIDOR = { altay_city: 1, back_to_altay: 1, ahe_road: 1, urumqi_night_train: 1 };
-  const COLOR = { drive: '#b0742c', shuttle: '#2e7f6e', hike: '#4f8f5b', schem: '#8a948d' };
+  /* 颜色只有一处定义：与 map.js 一致，一律引用 GeoMap.STYLE（geomap.js）。
+     否则高德引擎接管时会把新配色悄悄退回旧配色。 */
+  const FALLBACK = { drive: '#2A5750', shuttle: '#5C8A80', hike: '#7FA090', schem: '#A8A79E' };
+  const COLOR = new Proxy({}, {
+    get: (_, k) => {
+      const st = (window.GeoMap && GeoMap.STYLE) || {};
+      return (st[k] && st[k].color) || FALLBACK[k] || '#A8A79E';
+    },
+  });
   /* 取景只由"范围"决定：切三套方案时比例完全一致，不会忽远忽近（读者点名的毛病） */
   const BOUNDS = {
     core: [[48.33, 86.60], [48.90, 87.68]],
@@ -96,9 +103,9 @@
       const path = toGCJ(pts);
       if (path.length < 2) return;
       const casing = new AMap.Polyline({ map: state.map, path: path, strokeColor: '#ffffff',
-        strokeWeight: dash ? 1.6 : 6, strokeOpacity: .9, lineJoin: 'round', zIndex: 40 });
+        strokeWeight: dash ? 1.5 : 5.2, strokeOpacity: .92, lineJoin: 'round', zIndex: 40 });
       const line = new AMap.Polyline({ map: state.map, path: path, strokeColor: color,
-        strokeWeight: dash ? 2.2 : 3.6, strokeOpacity: .96,
+        strokeWeight: dash ? 2.0 : 3.0, strokeOpacity: .96,
         strokeStyle: dash ? 'dashed' : 'solid', strokeDasharray: [6, 7],
         lineJoin: 'round', showDir: !dash, zIndex: 45, cursor: 'pointer',
         extData: l.name + (l.km ? ' · ' + l.km + ' km' : '') });
@@ -149,6 +156,14 @@
         state.ov.push(tx);
       }
     });
+    /* 可选露营点：数据只有村庄坐标，用暖金帐篷与"今晚住这"的圆钉区分 */
+    (GeoMap.CAMP_IDS ? GeoMap.CAMP_IDS() : []).forEach(cid => {
+      const cp2 = place(cid);
+      if (!cp2 || !cp2.coord || cp2.coord[0] == null) return;
+      state.ov.push(new AMap.Marker({ map: state.map, position: lnglat(cp2),
+        content: '<i class="camp-dot" title="' + cp2.name + ' · 可选露营点"></i>',
+        offset: new AMap.Pixel(-6, 6), zIndex: 115 }));
+    });
     state.ov.forEach(o => { if (o.on) o.on('click', e => {
       const id = e.target.getExtData && e.target.getExtData();
       if (id && place(id) && window.TripLeaf && TripLeaf.openDrawer) TripLeaf.openDrawer(place(id));
@@ -185,7 +200,7 @@
     try {
       document.body.setAttribute('data-map', 'amap');   /* 先让容器可见，再建图，否则尺寸为 0 */
       state.map = new AMap.Map(host, { viewMode: '2D', zoom: 10.5, center: [87.15, 48.63],
-        mapStyle: 'amap://styles/light', resizeEnable: true });
+        mapStyle: 'amap://styles/light', resizeEnable: true });  /* light 预设：国境线比默认浅一档，同时保住山区／景区的深灰晕染（whitesmoke 会把灰底一起洗掉） */
       zoomCtl(host);
       window.TripAMap.active = true;
       setTimeout(() => { if (state.map) { state.map.resize(); try { state.map.setBounds(viewBounds()); } catch (e) { } draw(true); } }, 150);
