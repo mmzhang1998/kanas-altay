@@ -3,7 +3,10 @@
    OSM 缺失路段；无网或脚本失败：map.js 的 Leaflet+本地路网接管，再失败退 SVG。
    数据仍只来自 site-data.js / tracks.js / data/roads.js：本文件只负责"怎么画"。 */
 (function () {
-  const state = { day: 'all', scope: 'full', focus: null, map: null, ov: [], cache: {} };
+  const state = { day: 'all', scope: 'full', focus: null, map: null, ov: [], cache: {},
+    /* 图钉与名牌缓存：key = 地点 id。重绘只做增删差量——
+       整批 setMap(null) 再重建会让名字消失再出现，就是"闪烁、漂移"的来源。 */
+    pinOv: new Map(), campOv: new Map() };
   const place = id => TRIP.places.filter(x => x.id === id)[0];
   const CORRIDOR = { altay_city: 1, back_to_altay: 1, ahe_road: 1, urumqi_night_train: 1 };
   /* 颜色只有一处定义：与 map.js 一致，一律引用 GeoMap.STYLE（geomap.js）。
@@ -134,45 +137,73 @@
       if (HIDE[l.src === 'schematic' ? 'schem' : l.mode]) return;
       drawLeg(l, all);
     });
-    /* 标记与名牌：像素距离避让，挤不下的只留悬停 */
+    drawPinsAMap(ps);
+    drawCampsAMap();
+    /* 取景：全天视图用固定范围（切方案不跳比例）；选中某一天才按当天覆盖物取景 */
+    if (!keepView) {
+      if (state.day === 'all') { try { state.map.setBounds(viewBounds()); } catch (e) { } }
+      else { const allOv = state.ov.concat(Array.from(state.pinOv.values()).map(e => e.mk));
+        if (allOv.length) state.map.setFitView(allOv, false, [46, 46, 46, 46], 12); }
+    }
+  }
+
+  /* 图钉与名牌：一律常驻，位置交给高德自己跟随地图；只切换"显示／隐藏"。
+     挤在一起的只藏文字、图钉始终在。绝不 setMap(null) 重建，否则名字会消失再出现。 */
+  function drawPinsAMap(ps) {
+    const wanted = new Map();
+    ps.forEach(p => { if (p && p.coord && p.coord[0] != null && GeoMap.visible(p)
+      && !(window.HIDE && window.HIDE[p.kind === 'stay' ? 'stay' : ''])) wanted.set(p.id, p); });
+
+    /* 撤掉这一屏不再需要的 */
+    state.pinOv.forEach((e, id) => {
+      if (wanted.has(id)) return;
+      e.mk.setMap(null); if (e.tx) e.tx.setMap(null);
+      state.pinOv.delete(id);
+    });
+
     const taken = [];
-    ps.slice().sort((a, b) => (a.kind === 'stay' ? 0 : 3) - (b.kind === 'stay' ? 0 : 3)).forEach(p => {
-      if (!p.coord || p.coord[0] == null || !GeoMap.visible(p)) return;
-      if (window.HIDE && window.HIDE[p.kind === 'stay' ? 'stay' : '']) return;
+    wanted.forEach(p => {
+      const id = p.id;
       const cp = state.map.lngLatToContainer(lnglat(p));
-      const cls = p.kind === 'stay' ? 'stay' : (p.kind === 'hub' ? 'hub' : (p.kind === 'road' ? 'road' : 'sight'));
-      state.ov.push(new AMap.Marker({ map: state.map, position: lnglat(p),
-        content: '<i class="gpin ' + cls + '"><b></b></i>', offset: new AMap.Pixel(-9, -9),
-        zIndex: 120, extData: p.id, title: p.name }));
       const clash = taken.some(q => Math.hypot(q.x - cp.x, q.y - cp.y) < 40);
-      if (!clash) {
-        taken.push(cp);
+      if (!clash) taken.push(cp);
+      let e = state.pinOv.get(id);
+      if (!e) {
+        const cls = p.kind === 'stay' ? 'stay' : (p.kind === 'hub' ? 'hub' : (p.kind === 'road' ? 'road' : 'sight'));
+        const mk = new AMap.Marker({ map: state.map, position: lnglat(p),
+          content: '<i class="gpin ' + cls + '"><b></b></i>', offset: new AMap.Pixel(-9, -9),
+          zIndex: 120, extData: id, title: p.name });
         const tx = new AMap.Text({ map: state.map, text: p.name, position: lnglat(p),
           offset: new AMap.Pixel(14, -9), zIndex: 130,
           style: { 'background-color': 'transparent', 'border': 'none', 'box-shadow': 'none',
                    'color': '#20302A', 'font-size': '11.5px', 'font-weight': '600', 'padding': '0',
                    'text-shadow': '0 0 3px #FBFAF7,0 0 3px #FBFAF7,0 0 6px #FBFAF7' } });
         if (tx.dom) tx.dom.classList.add('tip-name');
-        state.ov.push(tx);
+        mk.on('click', () => { if (window.TripLeaf && TripLeaf.openDrawer) TripLeaf.openDrawer(p); });
+        e = { mk: mk, tx: tx };
+        state.pinOv.set(id, e);
       }
+      /* 只切显隐，不增删对象：同一地点自始至终是同一个 DOM */
+      if (e.tx && e.tx.dom) e.tx.dom.style.visibility = clash ? 'hidden' : 'visible';
     });
-    /* 可选露营点：数据只有村庄坐标，用暖金帐篷与"今晚住这"的圆钉区分 */
+  }
+
+  /* 可选露营点：与村庄名扎不同的帐篷标记，同样走缓存 */
+  function drawCampsAMap() {
+    const wanted = new Set();
     (GeoMap.CAMP_IDS ? GeoMap.CAMP_IDS() : []).forEach(cid => {
       const cp2 = place(cid);
       if (!cp2 || !cp2.coord || cp2.coord[0] == null) return;
-      state.ov.push(new AMap.Marker({ map: state.map, position: lnglat(cp2),
+      wanted.add(cid);
+      if (state.campOv.has(cid)) return;
+      state.campOv.set(cid, new AMap.Marker({ map: state.map, position: lnglat(cp2),
         content: '<i class="camp-dot" title="' + cp2.name + ' · 可选露营点"></i>',
         offset: new AMap.Pixel(-6, 6), zIndex: 115 }));
     });
-    state.ov.forEach(o => { if (o.on) o.on('click', e => {
-      const id = e.target.getExtData && e.target.getExtData();
-      if (id && place(id) && window.TripLeaf && TripLeaf.openDrawer) TripLeaf.openDrawer(place(id));
-    }); });
-    /* 取景：全天视图用固定范围（切方案不跳比例）；选中某一天才按当天覆盖物取景 */
-    if (!keepView) {
-      if (state.day === 'all') { try { state.map.setBounds(viewBounds()); } catch (e) { } }
-      else if (state.ov.length) state.map.setFitView(state.ov.slice(), false, [46, 46, 46, 46], 12);
-    }
+    state.campOv.forEach((mk, id) => {
+      if (wanted.has(id)) return;
+      mk.setMap(null); state.campOv.delete(id);
+    });
   }
 
   /* 地图右下角一对缩放按钮：＋ / －，和站点其它控件同一套设计语言 */
@@ -208,6 +239,9 @@
       if (svg) svg.style.display = 'none';
       window.addEventListener('planview', () => draw(true));
       state.map.on('complete', () => { draw(); scheduleFit(); });
+      /* 缩放只重算"名字要不要让位"，绝不重建图钉与名牌：
+         重算的是显隐，位置始终由地图自己带着走，所以不会闪也不会漂。 */
+      state.map.on('zoomend', () => { if (state.map && state.pinOv.size) drawPinsAMap(pois()); });
       window.addEventListener('resize', () => { if (state.map && state.day === 'all') scheduleFit(); });
       draw();
       /* 看门狗：Key 域名白名单未覆盖当前域名时瓦片会鉴权失败——5 秒内没有画布就
