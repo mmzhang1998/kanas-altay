@@ -124,7 +124,7 @@ addEventListener('popstate', () => { if (Guide.node) Guide.close(); });
 
 /* 方案示意图：同一套投影与四色，给 plans.html 用；首页的交互地图在 app.js。 */
 const Mini = {
-  el: null, W: 900, H: 420, M: 34,
+  el: null,
   mount(el) { this.el = el; },
   draw(planId) {
     if (!this.el || !window.TRIP) return;
@@ -132,39 +132,102 @@ const Mini = {
     const plan = TRIP.plans.filter(x => x.id === planId)[0] || TRIP.plans[0];
     const mk = (t, at) => { const e = document.createElementNS(NS, t); Object.keys(at || {}).forEach(k => e.setAttribute(k, at[k])); return e; };
     const skip = { campsites: 1, luggage: 1, back_to_altay: 1, baihaba_kanas_transfer: 1, urumqi_night_train: 1 };
-    const seq = plan.route.filter(id => !skip[id]).map(id => TRIP.places.filter(x => x.id === id)[0])
-      .filter(x => x && x.coord && x.coord[0] != null);
-    const legs = (window.GeoMap ? GeoMap.planLegs(planId, 'core') : []);
-    let pts = [];
-    seq.forEach(x => pts.push(x.coord));
-    legs.forEach(l => { pts = pts.concat(l.points || []); });
-    if (!pts.length) return;
-    const la = pts.map(x => x[0]), ln = pts.map(x => x[1]);
-    let a = Math.min.apply(null, ln), b = Math.max.apply(null, ln);
-    let c = Math.min.apply(null, la), d = Math.max.apply(null, la);
-    const px = (b - a) * .1 + .01, py = (d - c) * .14 + .01;
-    a -= px; b += px; c -= py; d += py;
-    const k = Math.min((this.W - 2 * this.M) / (b - a), (this.H - 2 * this.M) / (d - c));
-    const cx = (a + b) / 2, cy = (c + d) / 2;
-    const at = q => [(q[1] - cx) * k + this.W / 2, this.H / 2 - (q[0] - cy) * k];
-    const svg = mk('svg', { viewBox: '0 0 ' + this.W + ' ' + this.H, role: 'img',
+    const cos = Math.cos(48.4 * Math.PI / 180);   /* 让经纬度按真实长宽比呈现 */
+    const collect = pid => {
+      const pl = TRIP.plans.filter(x => x.id === pid)[0];
+      if (!pl) return { pts: [], legs: [] };
+      let pts = [];
+      (pl.route || []).filter(id => !skip[id]).forEach(id => {
+        const q = TRIP.places.filter(x => x.id === id)[0];
+        if (q && q.coord && q.coord[0] != null) pts.push(q.coord);
+      });
+      /* 用全线的真实路网腿（含阿勒泰走廊）；走向示意不进小图，小图只画能落到路面的线 */
+      const legs = (window.GeoMap ? GeoMap.planLegs(pid, 'full').filter(l => l.src !== 'schematic') : []);
+      legs.forEach(l => { pts = pts.concat(l.points || []); });
+      return { pts: pts, legs: legs };
+    };
+    /* 取景框用三套方案的并集：切方案时比例完全一致，不会忽大忽小 */
+    const me = collect(plan.id);
+    if (!me.pts.length) return;
+    const box = pts => {
+      const fx = pts.map(q => q[1] * cos), fy = pts.map(q => q[0]);
+      const gx0 = Math.min.apply(null, fx), gx1 = Math.max.apply(null, fx);
+      const gy0 = Math.min.apply(null, fy), gy1 = Math.max.apply(null, fy);
+      const px = (gx1 - gx0) * .035 + .003, py = (gy1 - gy0) * .035 + .003;
+      return { x0: gx0 - px, x1: gx1 + px, y0: gy0 - py, y1: gy1 + py,
+               r: (gx1 - gx0 + 2 * px) / (gy1 - gy0 + 2 * py) };
+    };
+    const union = [];
+    (TRIP.plans || []).forEach(p2 => {
+      if (p2.id === plan.id) return;
+      collect(p2.id).pts.forEach(q => union.push(q));
+    });
+    /* 三套并集的边框保证切方案时取景框完全不动；只有当并集把画幅拉成细长条、
+       留出大片空白时，才回退到当前方案自己的边框。 */
+    const mine = box(me.pts);
+    const all = union.length ? box(union.concat(me.pts)) : mine;
+    const pick = (all.r < 1.15 || all.r > 2.5) ? mine : all;
+    /* 把取景框规整到固定长宽比：画幅不忽宽忽窄，也不留大片空边 */
+    const RATIO = 1.18;
+    let bx0 = pick.x0, bx1 = pick.x1, by0 = pick.y0, by1 = pick.y1;
+    const cur = (bx1 - bx0) / (by1 - by0);
+    if (cur < RATIO) { const need = (by1 - by0) * RATIO, cx = (bx0 + bx1) / 2; bx0 = cx - need / 2; bx1 = cx + need / 2; }
+    else if (cur > RATIO) { const need = (bx1 - bx0) / RATIO, cy = (by0 + by1) / 2; by0 = cy - need / 2; by1 = cy + need / 2; }
+    const x0 = bx0, x1 = bx1, y0 = by0, y1 = by1;
+    const K = 1000;
+    const W = Math.max(1, Math.round((x1 - x0) * K)), H = Math.max(1, Math.round((y1 - y0) * K));
+    const at = q => [(q[1] * cos - x0) * K, (y1 - q[0]) * K];
+    /* 标签与圆点按实际显示宽度换算，窄栏里也不会缩成看不清的小字 */
+    const shown = Math.max(320, Math.round(this.el.getBoundingClientRect().width) || 800);
+    const u = W / shown;
+    const svg = mk('svg', { viewBox: '0 0 ' + W + ' ' + H, role: 'img',
                             'aria-label': plan.name + ' 路线示意' });
-    legs.forEach(l => {
+    me.legs.forEach(l => {
       const g = l.points;
       if (!g || g.length < 2) return;
       svg.appendChild(mk('path', { d: 'M' + g.map((q, i) => (i ? 'L' : '') + at(q).map(v => v.toFixed(1)).join(' ')).join(' '),
                                   class: 'route-line ' + (l.mode === 'hike' ? 'hike' : (l.mode === 'shuttle' ? 'shuttle' : 'drive'))
                                        + (l.src === 'schematic' ? ' intent' : '') }));
     });
-    seq.filter(x => x.kind === 'stay').forEach(x => {
-      const q = at(x.coord);
-      const g = mk('g', { class: 'poi' });
-      g.appendChild(mk('circle', { cx: q[0], cy: q[1], r: x.kind === 'stay' ? 8 : 6,
-                                   fill: x.kind === 'stay' ? '#102b27' : '#d6a750' }));
-      const t = mk('text', { x: q[0] + 11, y: q[1] + 4 });
-      t.textContent = x.name;
-      g.appendChild(t);
-      g.appendChild(mk('title')).textContent = x.name;
+    const seen = {};
+    const pinned = [];
+    me.pts.forEach(q => {
+      const p3 = TRIP.places.filter(x => x.coord && x.coord[0] === q[0] && x.coord[1] === q[1])[0];
+      /* 公路类点位在数据里只是一枚名义坐标，路面本身已经画出来了，不重复标点 */
+      if (!p3 || p3.kind === 'road' || seen[p3.id]) return;
+      seen[p3.id] = 1;
+      pinned.push(p3);
+    });
+    /* 过夜点优先级最高；标签贪心避让，窄栏里密集的点位宁可不写，也不叠成一团 */
+    pinned.sort((a, b) => (a.kind === 'stay' ? 0 : 1) - (b.kind === 'stay' ? 0 : 1));
+    const boxes = [];
+    const crowded = r => boxes.some(o => !(r[2] < o[0] || r[0] > o[2] || r[3] < o[1] || r[1] > o[3]));
+    pinned.forEach(p3 => {
+      const stay = p3.kind === 'stay';
+      const xy = at(p3.coord);
+      const g = mk('g', { class: 'poi ' + (stay ? 'stay' : 'hub') });
+      g.appendChild(mk('circle', { cx: xy[0].toFixed(1), cy: xy[1].toFixed(1),
+                                   r: ((stay ? 5.2 : 3.4) * u).toFixed(1) }));
+      const fs = (stay ? 12.5 : 11.5) * u;
+      const gap = (stay ? 13 : 10) * u, base = 4.5 * u, lineH = 16 * u;
+      const tw = p3.name.length * fs + 5 * u;
+      const cands = [[gap, base], [gap, base + lineH], [gap, base - lineH], [gap, base + 2 * lineH], [-gap - tw, base]];
+      let spot = null;
+      for (let i = 0; i < cands.length; i++) {
+        const c = cands[i];
+        const r = [xy[0] + c[0] - 2 * u, xy[1] + c[1] - fs, xy[0] + c[0] - 2 * u + tw, xy[1] + c[1] + 3 * u];
+        if (!crowded(r)) { spot = c; boxes.push(r); break; }
+      }
+      if (!spot && stay) {
+        spot = cands[0];
+        boxes.push([xy[0] + gap - 2 * u, xy[1] + base - fs, xy[0] + gap - 2 * u + tw, xy[1] + base + 3 * u]);
+      }
+      if (spot) {
+        const t = mk('text', { x: (xy[0] + spot[0]).toFixed(1), y: (xy[1] + spot[1]).toFixed(1), 'text-anchor': 'start' });
+        t.style.fontSize = fs.toFixed(1) + 'px';
+        t.textContent = p3.name;
+        g.appendChild(t);
+      }
       svg.appendChild(g);
     });
     this.el.innerHTML = '';
@@ -191,3 +254,79 @@ document.addEventListener('error', function (e) {
     + esc(i.getAttribute('alt') || (src ? src.split('/').pop() : '')) + '</span>';
   if (i.parentNode) i.parentNode.replaceChild(box, i);
 }, true);
+
+/* ══ 术语外化 ═══════════════════════════════════════════════════════════
+   底库（采集笔记、台账、费用表）里的研究用词不能出现在读者面前。
+   渲染层已经做过一轮清理，这里再加一道页面级的兜底：任何模块、任何动态内容
+   渲染完成后统一过一遍，把内部说法换成读者语言，并收拾替换后留下的碎标点。
+   ═══════════════════════════════════════════════════════════════════ */
+const POLISH_PAIRS = [
+  ['按车还是按人不明', '按车或按人计价待现场核价'], ['含等待与否不明', '是否含等待待现场核价'],
+  ['链接待补', '稍后补充'], ['实拍', '现场照片'], ['原帖', '来源'],
+  ['整包自报', '打包价·旅友实测'], ['不含门票自报', '不含门票·旅友实测'],
+  ['自报未成交', '旅友询价·未成交'], ['自报成交', '旅友实测成交'], ['评论自报', '旅友实测'],
+  ['亲测同向', '多人实测一致'], ['实测校对', '实地校对'], ['实测笔记', '实地笔记'], ['亲测条目', '实地记录'],
+  ['口径不明', '说法不一'], ['口径互斥', '说法不一'], ['口径不一致', '说法不一致'],
+  ['单源待核', '待现场确认'], ['未核实', '待现场确认'],
+  ['文档原口径', ''], ['主方案文档口径', '主方案估算'], ['免费口径', '是否免费'],
+  ['官方口径', '官方公布'], ['旧口径', ''], ['原口径', ''],
+  ['逐晚住宿口径', '逐晚住宿安排'], ['出行住宿口径', '住宿安排'],
+  ['作者名', '账号名'], ['自报', '旅友实测'], ['亲测', '实地体验'], ['实测', '实地核验'],
+  ['作者', '旅友'], ['楼主', '旅友'], ['素材', '资料'], ['简报', '资料'], ['台账', '账目'],
+  ['底库', '资料库'], ['单源', '单一来源'], ['待核', '待现场确认'], ['待确认', '出行前确认'],
+  ['楼中楼', ''], ['存疑', '待现场确认'], ['不明', '待现场确认'], ['模块', '页面'], ['口径', '标准'],
+  ['ASR', ''], ['OCR', ''], ['§', ''], ['v4', ''], ['v3', ''], ['v5', ''], ['v6', ''],
+  ['方案版本', '方案'], ['正式版', '定稿'],
+];
+const POLISH_SQUEEZE = [
+  [/[（(]\s*[，、；:：]?\s*[）)]/g, ''],
+  [/[（(]\s*[，、；:：]/g, '（'],
+  [/[，、；:：]\s*[）)]/g, '）'],
+  [/[，、；]{2,}/g, '，'], [/。{2,}/g, '。'], [/[ \t]{2,}/g, ' '],
+  [/\s*[，、；:：]\s*(?=[。；])/g, ''],
+  [/^\s*[，、；:：＋+—\-\s]+/g, ''],
+  [/\s*[。；]?\s*[^。；！？]{0,26}…+\s*$/g, ''],
+];
+const POLISH_RE = [
+  [/\s*[A-Za-z][A-Za-z0-9_.\-]{3,}\s*(?=[／\/])/g, ''],
+  [/\s*[A-Za-z][A-Za-z0-9_.\-]{3,}(?=["“])/g, ''],
+];
+function polishText(t) {
+  let s = String(t == null ? '' : t);
+  if (!/[\u4e00-\u9fa5]/.test(s)) return s;
+  for (let i = 0; i < POLISH_PAIRS.length; i++) {
+    if (s.indexOf(POLISH_PAIRS[i][0]) < 0) continue;
+    s = s.split(POLISH_PAIRS[i][0]).join(POLISH_PAIRS[i][1]);
+  }
+  for (let k = 0; k < POLISH_RE.length; k++) s = s.replace(POLISH_RE[k][0], POLISH_RE[k][1]);
+  for (let j = 0; j < POLISH_SQUEEZE.length; j++) s = s.replace(POLISH_SQUEEZE[j][0], POLISH_SQUEEZE[j][1]);
+  return s;
+}
+const SCRUB_SKIP = { SCRIPT: 1, STYLE: 1, TEXTAREA: 1, INPUT: 1, CODE: 1, PRE: 1 };
+function scrubText(root) {
+  if (!root || !document.createTreeWalker) return;
+  const walk = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
+  const jobs = [];
+  let n;
+  while ((n = walk.nextNode())) {
+    const p = n.parentNode;
+    if (!p || SCRUB_SKIP[p.nodeName]) continue;
+    const raw = n.nodeValue;
+    if (!raw || raw.length < 2) continue;
+    const next = polishText(raw);
+    if (next !== raw) jobs.push([n, next]);
+  }
+  jobs.forEach(function (j) { j[0].nodeValue = j[1]; });
+}
+let _scrubQueued = false;
+function scheduleScrub() {
+  if (_scrubQueued) return;
+  _scrubQueued = true;
+  const run = function () { _scrubQueued = false; scrubText(document.body); };
+  if (window.requestAnimationFrame) requestAnimationFrame(run); else setTimeout(run, 16);
+}
+if (document.body && window.MutationObserver) {
+  new MutationObserver(scheduleScrub)
+    .observe(document.body, { childList: true, subtree: true, characterData: true });
+  scheduleScrub();
+}

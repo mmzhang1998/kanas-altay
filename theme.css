@@ -1,0 +1,172 @@
+/* ══════════════════════════════════════════════════════════════════
+   theme.css — 统一设计系统（最后加载，收口 app.css / detail.css 的历史分叉）
+   圆角一套 · 色板一套 · 发丝线一套 · 字阶一套 · 卡内距一套
+   ══════════════════════════════════════════════════════════════════ */
+:root{
+  --paper:#FBFAF8; --surface:#FFFFFF; --sunken:#F7F6F1;
+  --ink:#181D1A; --ink-2:#3E4642; --muted:#6B7570; --faint:#98A19C;
+  --line:rgba(24,29,26,.10); --line-soft:rgba(24,29,26,.06); --line-strong:rgba(24,29,26,.20);
+  --pine:#123B33; --pine-2:#1C5247; --gold:#B0742C; --teal:#2E7F6E;
+  --r-xs:4px; --r-s:6px; --r-m:10px; --r-l:14px; --r-pill:999px;
+  --fs-xs:12px; --fs-sm:13px; --fs-body:14.5px; --fs-lead:16.5px; --fs-h3:17px;
+  --sp-1:8px; --sp-2:14px; --sp-3:20px; --sp-4:28px;
+  --shadow-1:0 1px 2px rgba(18,29,25,.04), 0 8px 24px rgba(18,29,25,.05);
+  --shadow-2:0 1px 2px rgba(18,29,25,.05), 0 18px 44px rgba(18,29,25,.09);
+}
+body{ background:var(--paper); color:var(--ink); }
+
+/* ── 版心与模块节奏 ─────────────────────────────────────────────── */
+.block{ padding:clamp(56px,6.4vw,96px) max(24px,4vw); max-width:1440px; }
+.block-head{ margin-bottom:30px; }
+.kicker{ font:600 11.5px/1.6 -apple-system,"PingFang SC",sans-serif; letter-spacing:.18em;
+  color:var(--faint); margin:0 0 12px; }
+.block-head h2{ font-size:clamp(26px,2.4vw,34px); line-height:1.24; font-weight:640;
+  letter-spacing:-.032em; margin:0 0 10px; }
+.block-sub{ color:var(--muted); font-size:var(--fs-body); margin:0; max-width:64ch; line-height:1.7; }
+
+/* ── 按钮与跳转：一个胶囊，一个小号 ─────────────────────────────── */
+.btn-line{ border:1px solid var(--line); color:var(--ink-2); border-radius:var(--r-pill);
+  background:var(--surface); font-weight:550; }
+.btn-line:hover{ border-color:var(--pine); color:var(--pine); }
+.btn-line.small{ padding:8px 16px; font-size:12.5px; }
+.mini-link,.text-link,.gc-go,.drawer-go,.dd-head a,.fm header a{ color:var(--pine); font-weight:600; }
+.hero-cta button{ border-radius:var(--r-m); }
+
+/* ─ 卡片：统一圆角/边框/内距/悬停 ──────────────────────────────── */
+.fm,.guide-card,.off-thumb,.off-panel,.money-cell,.day-tile,.topic-card,.official-card,
+.duo-card,.kv-list,.journey-workspace,.map-module,.tbl-wrap,.dtable-wrap,.cmp,.days-tbl{
+  border-radius:var(--r-l); border:1px solid var(--line); background:var(--surface);
+}
+.guide-card:hover,.day-tile:hover,.duo-card:hover{ box-shadow:var(--shadow-2);
+  border-color:var(--line-strong); transform:translateY(-2px); }
+
+/* ── 三方案差异表 ──────────────────────────────────────────────── */
+.tbl-wrap,.dtable-wrap{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
+table.cmp{ border-collapse:collapse; border-radius:var(--r-l); overflow:hidden; }
+table.cmp th{ background:var(--sunken); font:600 11.5px/1.5 -apple-system,"PingFang SC",sans-serif;
+  letter-spacing:.08em; color:var(--faint); padding:12px 14px; text-align:left; }
+table.cmp th.cmp-key{ width:24%; }
+table.cmp td{ font-size:var(--fs-sm); padding:12px 14px; color:var(--ink-2);
+  border-top:1px solid var(--line-soft); }
+table.cmp tbody tr:hover td{ background:#FBFAF6; }
+table.cmp th.cur,table.cmp td.cur{ background:rgba(18,59,51,.045); }
+.cmp-dot{ border-radius:50%; }
+.cmp-note{ font-size:var(--fs-xs); color:var(--faint); margin:10px 0 0; }
+
+/* ── 九天总表：日程与费用同一行 ─────────────────────────────────── */
+.dtable{ width:100%; border-collapse:collapse; min-width:1040px; }
+.dtable thead th{ background:var(--sunken); font:600 11.5px/1.5 -apple-system,"PingFang SC",sans-serif;
+  letter-spacing:.08em; color:var(--faint); text-align:left; padding:13px 14px;
+  border-bottom:1px solid var(--line); white-space:nowrap; }
+.dtable tbody tr{ cursor:pointer; transition:background .16s; }
+.dtable tbody tr:hover{ background:#FBFAF6; }
+.dtable tbody tr+tr td{ border-top:1px solid var(--line-soft); }
+.dtable td{ padding:14px; font-size:var(--fs-sm); color:var(--ink-2); vertical-align:middle; }
+.dtable td.c-date{ width:92px; }
+.dtable td.c-date b{ display:block; font-size:15px; font-weight:660; color:var(--ink);
+  font-variant-numeric:tabular-nums; }
+.dtable td.c-date span{ font-size:11.5px; color:var(--faint); }
+.dtable td.c-topic{ min-width:250px; }
+.dtable td.c-topic b{ display:block; font-size:14px; font-weight:640; color:var(--ink); margin-bottom:5px; }
+.dtable td.c-move{ min-width:190px; color:#5C6661; }
+.dtable td.c-stay{ min-width:130px; }
+.dtable th.c-num,.dtable td.c-num{ text-align:right; font-variant-numeric:tabular-nums;
+  white-space:nowrap; width:98px; }
+.dtable td.c-go{ width:34px; text-align:right; color:var(--faint); }
+.dtable tr:hover td.c-go{ color:var(--pine); }
+.dtable .tag{ display:inline-block; background:#F2F1EA; border-radius:var(--r-xs);
+  padding:2px 8px; font-size:11.5px; color:#5C6661; margin:2px 5px 0 0; }
+.dtable .q-chip{ display:inline-block; font-style:normal; font-size:12px; color:#8A6A2F;
+  background:#FBF6EC; border:1px solid rgba(185,130,47,.20); border-radius:var(--r-pill);
+  padding:1px 9px; }
+.dtable .free{ color:var(--faint); }
+.dtable-wrap .dtable-note{ font-size:var(--fs-xs); color:var(--faint); padding:11px 14px;
+  border-top:1px solid var(--line-soft); background:var(--sunken); }
+
+/* ── 费用总览：一条横带，发丝线分隔，不做六个盒子 ───────────────── */
+.money-grid{ display:grid; grid-template-columns:repeat(6,1fr); gap:0;
+  border:1px solid var(--line); border-radius:var(--r-l); overflow:hidden; background:var(--surface); }
+.money-cell{ padding:20px 22px; border-left:1px solid var(--line-soft); }
+.money-cell:first-child{ border-left:0; }
+.money-cell i{ display:block; font-style:normal; font-size:11.5px; color:var(--faint);
+  letter-spacing:.05em; }
+.money-cell b{ display:block; font-size:20px; font-weight:640; letter-spacing:-.022em;
+  margin:8px 0 5px; font-variant-numeric:tabular-nums; }
+.money-cell span{ display:block; font-size:12px; color:var(--muted); line-height:1.6; }
+@media (max-width:1160px){ .money-grid{ grid-template-columns:repeat(3,1fr); }
+  .money-cell:nth-child(3n+1){ border-left:0; }
+  .money-cell:nth-child(n+4){ border-top:1px solid var(--line-soft); } }
+@media (max-width:640px){ .money-grid{ grid-template-columns:repeat(2,1fr); }
+  .money-cell{ padding:16px; } .money-cell:nth-child(odd){ border-left:0; }
+  .money-cell:nth-child(n+3){ border-top:1px solid var(--line-soft); } }
+.money-foot{ display:flex; align-items:center; gap:14px; margin-top:16px; flex-wrap:wrap; }
+.money-foot p{ margin:0; font-size:var(--fs-sm); color:var(--muted); }
+.money-foot .btn-line{ margin-left:auto; }
+
+/* ── 出发前事项 ─────────────────────────────────────────────────── */
+.fm-list{ background:var(--surface); border:1px solid var(--line); border-radius:var(--r-l);
+  overflow:hidden; }
+.fm-list a{ display:grid; grid-template-columns:104px 76px minmax(0,1fr) 24px; gap:16px;
+  align-items:baseline; padding:14px 20px; text-decoration:none; }
+.fm-due{ font-size:12.5px; color:var(--gold); font-variant-numeric:tabular-nums; }
+.fm-who{ font-size:12.5px; color:var(--faint); }
+.fm-what{ font-size:var(--fs-body); color:var(--ink-2); line-height:1.65; }
+
+/* ── 攻略卡：图片＋标题，正文压到两行 ───────────────────────────── */
+.guide-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+.guide-card{ padding:0; overflow:hidden; display:flex; flex-direction:column;
+  transition:transform .2s, box-shadow .2s, border-color .2s; }
+.guide-card img,.gc-ph{ width:100%; height:auto; aspect-ratio:16/10; object-fit:cover; display:block; }
+.gc-body{ padding:16px 18px 0; }
+.gc-k{ font-size:15.5px; font-weight:640; margin:0 0 6px; color:var(--ink); }
+.gc-c{ font-size:var(--fs-sm); color:var(--muted); line-height:1.66; margin:0;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.guide-card .gc-go{ margin:0; padding:12px 18px 16px; font-size:12.5px; }
+@media (max-width:1000px){ .guide-grid{ grid-template-columns:repeat(2,1fr); } }
+@media (max-width:620px){ .guide-grid{ grid-template-columns:1fr; } }
+
+/* ─ 官方导览：缩略图 ＋ 提炼面板 ───────────────────────────────── */
+.off-thumbs{ display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:16px; }
+.off-thumb{ padding:0; overflow:hidden; cursor:pointer; border-radius:var(--r-m);
+  transition:border-color .18s, box-shadow .18s, transform .18s; }
+.off-thumb img{ width:100%; height:118px; object-fit:cover; display:block; }
+.off-thumb span{ display:block; font-size:12.5px; padding:9px 11px; color:var(--ink-2); }
+.off-thumb:hover{ border-color:var(--line-strong); }
+.off-thumb.active{ border-color:var(--pine);
+  box-shadow:0 0 0 1px rgba(18,59,51,.55), 0 8px 22px rgba(18,59,51,.10); }
+.off-panel{ padding:22px 24px 24px; }
+.offp-head h3{ font-size:18px; font-weight:640; letter-spacing:-.02em; }
+.offp-key{ font-size:var(--fs-body); color:var(--ink-2); line-height:1.72;
+  border-left:2px solid var(--gold); padding-left:12px; margin:0 0 20px; }
+.offp-cols{ gap:22px; margin-bottom:16px; }
+.offp-h{ font:600 11.5px/1.5 -apple-system,"PingFang SC",sans-serif; letter-spacing:.1em;
+  color:var(--faint); margin:0 0 10px; }
+.offp-col ul{ list-style:none; margin:0; padding:0; }
+.offp-col li{ position:relative; font-size:var(--fs-sm); color:var(--ink-2); line-height:1.62;
+  background:#FAF9F5; border:0; border-radius:var(--r-s); padding:9px 12px 9px 26px; margin-bottom:6px; }
+.offp-col li:before{ content:""; position:absolute; left:12px; top:17px; width:7px; height:1.5px;
+  background:var(--teal); border-radius:2px; }
+.offp-adopt{ margin-top:14px; padding-top:14px; border-top:1px solid var(--line-soft); }
+.chip{ font-size:12.5px; color:var(--pine-2); background:#EDF3F0; border:1px solid #CFE0D8;
+  border-radius:var(--r-pill); padding:4px 12px; }
+@media (max-width:900px){ .offp-cols,.offp-grid{ grid-template-columns:1fr; }
+  .off-thumbs{ grid-template-columns:repeat(2,1fr); } }
+
+/* ── 地图模块：去掉多余白条，图例与抽屉收口 ─────────────────────── */
+.map-module{ overflow:hidden; }
+.map-overlay{ pointer-events:none; }
+.scope-switch button{ border-radius:var(--r-pill); border:1px solid var(--line);
+  background:rgba(255,255,255,.92); font-size:12px; padding:5px 12px; color:#5C6661; }
+.scope-switch button.active{ border-color:var(--pine); color:var(--pine); background:#fff; }
+.map-legend{ font-size:12px; gap:10px 18px; padding:10px 16px; }
+.map-drawer{ border-radius:0 var(--r-l) var(--r-l) 0; }
+.leg-figs div{ border-radius:var(--r-s); border:1px solid var(--line-soft); background:#F7F6F1; }
+
+/* ── 详情页（detail.css 之上收口）──────────────────────────────── */
+.detail-section h2{ letter-spacing:-.028em; }
+.detail-section .sec-lead{ font-size:13.5px; color:var(--muted); line-height:1.7; }
+.detail-grid{ max-width:1240px; }
+
+/* ── 地图标签去重：撞车的标签只隐藏文字，图钉不消失 ───────────────── */
+.leaflet-tooltip.tip-name.tip-hide{ opacity:0 !important; visibility:hidden !important; }
+.leaflet-tooltip.tip-name.tip-perm{ pointer-events:none; }

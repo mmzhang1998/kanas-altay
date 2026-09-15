@@ -5,9 +5,9 @@
 window.GeoMap = (function () {
   const R = window.ROADS || { water: [], ctx: [], legs: [] };
   const STYLE = {
-    drive:   { color: '#b0742c', width: 3.6, dash: null,  label: '包车／拼车（真实道路）' },
-    shuttle: { color: '#2e7f6e', width: 3.0, dash: null,  label: '景区区间车／摆渡（真实道路）' },
-    hike:    { color: '#4f8f5b', width: 3.0, dash: '0.1 7', label: '徒步（两步路实录）' },
+    drive:   { color: '#b0742c', width: 3.6, dash: null,  label: '包车／拼车（导航道路）' },
+    shuttle: { color: '#2e7f6e', width: 3.0, dash: null,  label: '景区区间车／摆渡（导航道路）' },
+    hike:    { color: '#4f8f5b', width: 3.0, dash: '0.1 7', label: '徒步路线' },
     stub:    { color: '#9aa79f', width: 1.6, dash: '2 6', label: '接驳示意（无公开路网）' },
     schem:   { color: '#8a948d', width: 2.4, dash: '7 8', label: '走向示意（该路未收录于公开路网）' },
     ctx:     { color: '#ffffff', width: 2.0, dash: null },
@@ -16,11 +16,15 @@ window.GeoMap = (function () {
   /* 交通方式判定：阿禾公路、铁贾公路、白哈巴通行线都是车行，绝不能被画成徒步。
      kind 优先；kind 缺失时回退到名称里的关键词。 */
   function modeOf(kind, name) {
-    const k = String(kind || '') + ' ' + String(name || '');
-    if (/区间|摆渡|shuttle/.test(k)) return 'shuttle';
-    if (/徒步|hike|穿越|岩画|实录/.test(k)) return 'hike';
-    if (/行车|公路|通行|导航线|drive|包车|自驾/.test(k)) return 'drive';
-    return 'hike';
+    /* kind 是权威字段：只要它明确写了车行/区间车/徒步，就直接采信，
+       不再回到名称里猜——历史 bug 就是"行车实录"里的"实录"二字把阿禾公路判成了徒步。 */
+    const kd = String(kind || '').trim().toLowerCase();
+    if (kd === 'drive' || kd === 'shuttle' || kd === 'bus' || kd === 'train' || kd === 'hike') return kd;
+    const k = kd + ' ' + String(name || '');
+    if (/区间|摆渡|shuttle|村公交|大巴/.test(k)) return 'shuttle';
+    if (/行车|公路|通行|导航线|drive|包车|自驾|实录/.test(k)) return 'drive';
+    if (/徒步|hike|穿越|岩画|步道|栈道|walk/.test(k)) return 'hike';
+    return 'drive';
   }
 
   const DAY_OF = { '0924': '9/24', '0925': '9/25', '0926': '9/26', '0927': '9/27', '0928': '9/28',
@@ -44,7 +48,7 @@ window.GeoMap = (function () {
     const mk = (t, a) => { const e = document.createElementNS(NS, t);
       Object.keys(a || {}).forEach(k => e.setAttribute(k, a[k])); return e; };
     svg.innerHTML = '';
-    svg.append(mk('rect', { width: 1000, height: 600, class: 'gm-bg' }));
+    svg.append(mk('rect', { width: v.w || 1000, height: v.h || 600, class: 'gm-bg' }));
 
     /* 水体：真实的湖，不是装饰 */
     (R.water || []).forEach(w => {
@@ -61,7 +65,9 @@ window.GeoMap = (function () {
     /* 本次行程：先画白底衬线，再画彩色主线，交叉处才看得清 */
     const legs = v.planLegs || legsFor(v.dayId, v.scope);
     const tracks = v.tracks || [];
-    const line = (pts, st, cls, tip) => {
+    /* 第四参数是"这一段自己"的对象：点击时才拿得到它。
+       早先这里闭包引用了外层 forEach 的变量，点徒步线会直接抛错，详情根本打不开。 */
+    const line = (pts, st, cls, tip, seg) => {
       if (!pts || pts.length < 2) return;
       const d = 'M' + pts.map(p => at(p).map(x => x.toFixed(1)).join(' ')).join('L');
       svg.append(mk('path', { d: d, class: 'gm-casing ' + (cls || '') }));
@@ -69,15 +75,19 @@ window.GeoMap = (function () {
         stroke: st.color, 'stroke-width': st.width, 'stroke-dasharray': st.dash || 'none' });
       if (tip) { const t = mk('title', {}); t.textContent = tip; e.append(t); }
       e.style.cursor = 'pointer';
-      e.addEventListener('click', () => { if (window.__openLeg) window.__openLeg(l); });
+      e.addEventListener('click', () => {
+        if (!window.__openLeg) return;
+        window.__openLeg(seg || { name: tip, mode: (st && st.mode) || 'drive', src: 'schematic', km: 0 });
+      });
       svg.append(e);
     };
     legs.forEach(l => {
       if (!l.points.length) return;
-      const st2 = l.src === 'schematic' ? STYLE.schem
+      let st2 = l.src === 'schematic' ? STYLE.schem
         : (v.colorByPlan ? { color: PLAN_COLOR[l.plan] || STYLE.drive.color, width: 3.2, dash: null } : STYLE[l.mode]);
+      if (l.mode && !st2.mode) st2 = Object.assign({}, st2, { mode: l.mode });
       line(l.points, st2, 'leg-' + (l.src === 'schematic' ? 'schem' : l.mode),
-           l.name + (l.src === 'schematic' ? ' · 走向示意' : (l.km ? ' · ' + l.km + ' km' : '')));
+           l.name + (l.src === 'schematic' ? ' · 走向示意' : (l.km ? ' · ' + l.km + ' km' : '')), l);
 
       if (l.stub && v.pois) {   /* 接驳示意：只连接"路网端点 ↔ 白名单坐标"，明确不是道路 */
         const a = l.points[0], b = l.points[l.points.length - 1];
@@ -90,13 +100,19 @@ window.GeoMap = (function () {
       }
     });
     tracks.forEach(t => {
+      /* 这一屏已经画了同一条路的真实路段，就不要再叠一份实录 */
+      if (legs.some(l => l.points && sameCorridor(t.points, l.points))) return;
       const g = (t.adopted_points && t.adopted_points.length) ? t.adopted_points : t.points;
       const m = modeOf(t.kind, t.name);
-      const isHike = m === 'hike';
       if ((t.adopted_points || []).length && t.points && t.points.length > 1)
-        line(t.points, STYLE.ghost, 'ghost', null);
-      line(g, STYLE[m] || STYLE.drive, 'leg-' + m,
-           t.name + ' · ' + (t.distance || '') + ' km');
+        line(t.points, STYLE.ghost, 'ghost', null, null);
+      /* 里程：有"实际采用段"就用采用段，否则用整条轨迹原生统计 */
+      const adoptedKm = parseFloat(String(t.adopted_km == null ? '' : t.adopted_km).replace(/[^0-9.]/g, ''));
+      const km = isFinite(adoptedKm) ? adoptedKm : t.distance;
+      const seg = { name: t.name, km: km, mode: m, src: 'kml', day: t.day,
+                    gain: t.gain, loss: t.loss, elevation: t.elevation,
+                    adoptedKm: t.adopted_km, adoptedNote: t.adopted_note, fullKm: t.distance };
+      line(g, STYLE[m] || STYLE.drive, 'leg-' + m, t.name + ' · ' + (km || '') + ' km', seg);
     });
     return { legs: legs };
   }
@@ -133,13 +149,6 @@ window.GeoMap = (function () {
   }
   function midOf(pts) { return pts && pts.length ? pts[Math.floor(pts.length / 2)] : null; }
   /* 核心视图里 10/1 返程只画一段指向（完整线在"含阿禾全线"） */
-  function returnStub(planId) {
-    const j = placeOf('jiadengyu');
-    if (!j || !j.coord) return null;
-    return { plan: planId, day: '1001', mode: 'drive', src: 'schematic', km: 228,
-             name: '10/1 贾登峪 → 阿勒泰站',
-             points: [j.coord, [j.coord[0] - 0.22, j.coord[1] + 0.30]] };
-  }
   const CAMP_IDS = () => {
     const t = (window.TRIP && TRIP.topics || []).filter(x => x.id === 'camp')[0];
     return (t ? t.places : []).filter(id => id !== 'campsites');
@@ -154,6 +163,58 @@ window.GeoMap = (function () {
   const hidden = l => !!(window.HIDE || {})[hideKey(l)];
   /* 未过滤的原始腿列表：图例要靠它判断"这一类到底存不存在"。
      若用过滤后的列表算图例，点掉一类按钮也会跟着消失，读起来像筛选失效。 */
+  /* 方案级过滤：每一天该走哪些路，用当天 places 里出现的点来判定，
+     否则三套方案共用同一批"日期腿"，切换按钮时地图不会变。 */
+  function legAllowed(plan, d, l) {
+    if (l.id === 'L1' || l.id === 'L10') return true;
+    const tagged = (window.LEG_TAGS || R.LEG_TAGS) && (window.LEG_TAGS || R.LEG_TAGS)[l.id];
+    if (!tagged) return true;
+    const want = {};
+    ((plan.day_places || {})[d] || []).forEach(id => { want[id] = 1; });
+    /* 起终点的白名单：由 build_roads.py 写入 LEG_TAGS，没有标注就视为通用腿 */
+    return tagged.from.some(id => want[id]) && tagged.to.some(id => want[id]);
+  }
+  /* ── 实录（KML）该不该出现在这一套方案里 ──────────────────────────
+     实录只属于"当天行程点里真的包含它两端"的方案；否则三套方案会共用同一批轨迹，
+     切换方案时地图看着没变（读者原话：切换顶部方案按钮，地图路线没变化）。
+     另外 roads.js 的 src=kml 路段与 tracks.js 是同一批原始实录，重复落笔会叠出两层线。 */
+  const TRACK_PLACES = {
+    '2025-04-21-103139': ['hemu_village', 'xiaoshike_meilifeng'],
+    '阿勒泰布尔津县-穿越-贾登峪-布奴阿拉安': ['jiadengyu', 'bulaan'],
+    '2026-06-23-091425-喀纳斯三湾': ['shenxian_bay', 'wolong_bay'],
+    '喀纳斯吐鲁克岩画往返': ['turuk_rockart'],
+    '大美新疆白哈巴穿越到喀纳斯': ['baihaba', 'kanas_hub'],
+    '阿勒泰市-阿禾公路-禾木村': ['altay_city', 'hemu_village'],
+    '2025-02-25-145544': ['hemu_village'],
+    '2026-07-17-白哈巴-喀纳斯': ['baihaba', 'kanas_hub'],
+  };
+  /* 同走廊判定：实录与真实路段常常是同一条路的两份几何（点数、采样都不同），
+     只比端点就会漏，所以判断"两端都贴着这条折线、这条折线两端也贴着实录"。
+     命中就说明是一段路的两份画法，只画一份，避免叠成两层线、里程还被算两遍。 */
+  const NEAR_KM = 0.4;
+  function nearLine(line, p) {
+    for (let i = 0; i < line.length; i++) {
+      const dy = (line[i][0] - p[0]) * 111.2, dx = (line[i][1] - p[1]) * 73.4;
+      if (Math.sqrt(dx * dx + dy * dy) <= NEAR_KM) return true;
+    }
+    return false;
+  }
+  function sameCorridor(pts, line) {
+    if (!pts || pts.length < 2 || !line || line.length < 2) return false;
+    if (!nearLine(line, pts[0]) || !nearLine(line, pts[pts.length - 1])) return false;
+    return nearLine(pts, line[0]) && nearLine(pts, line[line.length - 1]);
+  }
+  /* 这一段本身就是"导航线"（tracks 注册表里 is_nav_line），和 roads.js 的 L3
+     区间车路段是同一条路：不采用实录，直接由 L3 落笔，避免同路两条线叠着走。 */
+  const TRACK_DROP = { '阿勒泰布尔津县-穿越-贾登峪-布奴阿拉安': 1 };
+  /* 「不采用」的实录任何方案都不画 */
+  function trackAllowed(plan, did, t) {
+    if (TRACK_DROP[t.id]) return false;
+    if (/不采用/.test(String(t.status || ''))) return false;
+    const ids = (plan.day_places || {})[did] || [];
+    const need = TRACK_PLACES[t.id];
+    return need ? need.every(id => ids.indexOf(id) >= 0) : false;
+  }
   function planLegsRaw(planIds, scope, dayId) {
     const out = [];
     (planIds || []).forEach(planId => {
@@ -165,20 +226,27 @@ window.GeoMap = (function () {
         R.legs.forEach(l => {
           if (l.day !== d) return;
           if (scope === 'core' && CORRIDOR_LEG[l.id]) return;
+          if (!legAllowed(plan, did, l)) return;
           out.push({ plan: planId, day: did, dayLabel: l.day, mode: l.mode, src: l.src,
                      name: l.name, points: l.points, id: l.id, km: l.km });
         });
         (window.TRACKS ? TRACKS.tracks : []).forEach(t => {
+          if (!trackAllowed(plan, did, t)) return;
+          /* 同一天已有这份真实路段，就不再叠同一段实录 */
+          if (R.legs.some(l => l.day === d && sameCorridor(t.points, l.points))) return;
           const ad = t.adopted_points && t.adopted_points.length;
           if (String(t.day || '').indexOf(d) === 0 && t.points && t.points.length > 1
               && (ad || modeOf(t.kind, t.name) !== 'hike'))
             out.push({ plan: planId, day: did, dayLabel: d, mode: modeOf(t.kind, t.name), src: 'kml', name: t.name,
-                       points: ad ? t.adopted_points : t.points, id: t.id, km: t.distance });
+                       points: ad ? t.adopted_points : t.points, id: t.id,
+                       km: (function () {
+                         const k = parseFloat(String(t.adopted_km == null ? '' : t.adopted_km).replace(/[^0-9.]/g, ''));
+                         return isFinite(k) ? k : t.distance;
+                       })(),
+                       gain: t.gain, loss: t.loss, elevation: t.elevation,
+                       adoptedNote: t.adopted_note, fullKm: t.distance });
         });
       });
-      if (scope === 'core' && (!dayId || dayId === '1001')) {
-        const rs = returnStub(planId); if (rs) out.push(rs);
-      }
     });
     return out;
   }
@@ -194,6 +262,7 @@ window.GeoMap = (function () {
   }
   const visible = p => !(window.HIDE && window.HIDE.stay && p.kind === 'stay');
   return { legsFor: legsFor, planLegs: planLegs, planLegsRaw: planLegsRaw, dayLegs: dayLegs, visible: visible,
+           trackAllowed: trackAllowed, sameCorridor: sameCorridor,
            legLabel: legLabel, CAMP_IDS: CAMP_IDS, PLAN_COLOR: PLAN_COLOR, PLAN_NAME: PLAN_NAME, pinHTML: pinHTML, drawSVG: drawSVG, labelAttrs: labelAttrs, modeOf: modeOf,
            STYLE: STYLE, raw: R };
 })();

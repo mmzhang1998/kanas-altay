@@ -1,23 +1,58 @@
-/* 首页地图：Leaflet + 真实底图瓦片（Esri 灰底，调色后与站点同色系）。
+/* 首页地图：Leaflet ＋ 高德中文路网瓦片（webrd）。
    数据一律来自 site-data.js / tracks.js；本文件只负责"怎么画"，不产生任何事实。
-   底图或 Leaflet 不可用时，app.js 的真实坐标 SVG 视图原样保留（不隐藏、不报错）。 */
+   瓦片不可达时由 app.js 的真实坐标 SVG 视图接管（不隐藏、不报错）。 */
 (function () {
-  const COLOR = {
-    drive: '#c8964a', shuttle: '#5c8a63', bus: '#4c7d8c', hike: '#c9603f',
-    train: '#6f6a86', intent: '#9fb0a8',
-  };
+  /* 颜色只有一处定义：一律引用 GeoMap.STYLE（geomap.js）。
+     同一套设计语言必须让 SVG／Leaflet／高德三套引擎对同一种走法给出同一个颜色。 */
+  const FALLBACK = { drive: '#b0742c', shuttle: '#2e7f6e', hike: '#4f8f5b', schem: '#8a948d',
+                     bus: '#4c7d8c', train: '#6f6a86', intent: '#9fb0a8' };
+  const COLOR = new Proxy({}, {
+    get: (_, k) => {
+      const st = (window.GeoMap && GeoMap.STYLE) || {};
+      return (st[k] && st[k].color) || FALLBACK[k] || '#8a948d';
+    },
+  });
   const BOUNDS = {
     core: [[48.33, 86.60], [48.90, 87.68]],          /* 禾木—贾登峪—白哈巴—喀纳斯 */
     full: [[47.72, 86.45], [48.95, 88.32]],          /* 加上阿勒泰站与阿禾公路走廊 */
   };
   const WORLD = [[47.2, 85.6], [49.6, 89.2]];
-  let map = null, layers = { base: null, lines: null, pins: null }, tileOk = null, ready = false;
+  let map = null, layers = { base: null, lines: null, pins: null, camp: null }, tileOk = null, ready = false;
+  let active = false;
   let state = { day: 'all', scope: 'full', focus: null, plan: 'main' };
 
   const place = id => TRIP.places.filter(x => x.id === id)[0];
   const track = id => (window.TRACKS ? TRACKS.tracks.filter(t => t.id === id)[0] : null);
   const esc2 = s => String(s == null ? '' : s).replace(/[&<>"]/g,
     c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+  /* ── WGS-84 → GCJ-02 ────────────────────────────────────────────────
+     高德瓦片是 GCJ-02；行程数据（KML 实录、OSM 路由、高德导航烘焙）统一存 WGS-84。
+     不换算就会出现 300—600 m 的系统性偏移：点位看起来"就在附近"，其实没压在路上。 */
+  const PI = 3.14159265358979324, A = 6378245.0, EE = 0.00669342162296594323;
+  const outCN = (lng, lat) => lng < 72.004 || lng > 137.8347 || lat < 0.8293 || lat > 55.8271;
+  function tfLat(x, y) { let r = -100 + 2 * x + 3 * y + 0.2 * y * y + 0.1 * x * y + 0.2 * Math.sqrt(Math.abs(x));
+    r += (20 * Math.sin(6 * x * PI) + 20 * Math.sin(2 * x * PI)) * 2 / 3;
+    r += (20 * Math.sin(y * PI) + 40 * Math.sin(y / 3 * PI)) * 2 / 3;
+    r += (160 * Math.sin(y / 12 * PI) + 320 * Math.sin(y * PI / 30)) * 2 / 3; return r; }
+  function tfLng(x, y) { let r = 300 + x + 2 * y + 0.1 * x * x + 0.1 * x * y + 0.1 * Math.sqrt(Math.abs(x));
+    r += (20 * Math.sin(6 * x * PI) + 20 * Math.sin(2 * x * PI)) * 2 / 3;
+    r += (20 * Math.sin(x * PI) + 40 * Math.sin(x / 3 * PI)) * 2 / 3;
+    r += (150 * Math.sin(x / 12 * PI) + 300 * Math.sin(x / 30 * PI)) * 2 / 3; return r; }
+  function wgs2gcj(lng, lat) {
+    if (outCN(lng, lat)) return [lng, lat];
+    let dLat = tfLat(lng - 105, lat - 35), dLng = tfLng(lng - 105, lat - 35);
+    const radLat = lat / 180 * PI, s = Math.sin(radLat), m = 1 - EE * s * s, sq = Math.sqrt(m);
+    dLat = dLat * 180 / ((A * (1 - EE)) / (m * sq) * PI); dLng = dLng * 180 / (A / sq * Math.cos(radLat) * PI);
+    return [lng + dLng, lat + dLat];
+  }
+  /* 点：已烘焙 coord_gcj 直接用，否则由 WGS 换算 */
+  function poiLL(p) {
+    if (p.coord_gcj && p.coord_gcj[0] != null) return [p.coord_gcj[0], p.coord_gcj[1]];
+    const g = wgs2gcj(p.coord[1], p.coord[0]);
+    return [g[1], g[0]];
+  }
+  const toGCJ = pts => (pts || []).map(q => { const g = wgs2gcj(q[1], q[0]); return [g[1], g[0]]; });
 
   function pinIcon(p) {
     const cls = p.kind === 'stay' ? 'stay' : (p.kind === 'hub' ? 'hub' :
@@ -79,7 +114,7 @@
       const st = l.src === 'schematic' ? GeoMap.STYLE.schem
         : ((c.planView === 'all') ? { color: GeoMap.PLAN_COLOR[l.plan] || GeoMap.STYLE.drive.color,
                                       width: 3.2, dash: null } : GeoMap.STYLE[l.mode]) || GeoMap.STYLE.drive;
-      const ll = l.points.map(q => [q[0], q[1]]);
+      const ll = toGCJ(l.points);
       L.polyline(ll, { color: '#ffffff', weight: st.width + 2.6, opacity: .92,
                        interactive: false, lineCap: 'round', lineJoin: 'round' }).addTo(layers.lines);
       L.polyline(ll, { color: st.color, weight: st.width, opacity: .96, dashArray: st.dash,
@@ -91,9 +126,9 @@
       if (l.stub) {
         [ll[0], ll[ll.length - 1]].forEach(q => {
           const near = c.pois.filter(p => p.coord && p.coord[0] != null)
-            .map(p => ({ p: p, d: Math.hypot(p.coord[0] - q[0], p.coord[1] - q[1]) }))
+            .map(p => { const t = poiLL(p); return { p: p, t: t, d: Math.hypot(t[0] - q[0], t[1] - q[1]) }; })
             .sort((x, y) => x.d - y.d)[0];
-          if (near && near.d < 0.06) L.polyline([q, [near.p.coord[0], near.p.coord[1]]],
+          if (near && near.d < 0.06) L.polyline([q, near.t],
             { color: GeoMap.STYLE.stub.color, weight: 1.6, dashArray: '2 6', opacity: .9, interactive: false })
             .bindTooltip('接驳示意：这一段没有公开路网', { sticky: true, className: 'tip-line' })
             .addTo(layers.lines);
@@ -107,10 +142,10 @@
       const isHike = GeoMap.modeOf(t.kind, t.name) === 'hike';
       const full = (t.adopted_points || []).length ? t.points : null;
       if (full && full.length > 1) {                       /* 完整轨迹压淡，采用段加粗：一眼看出"走哪段" */
-        L.polyline(full.map(q => [q[0], q[1]]), { color: isHike ? COLOR.hike : COLOR.drive,
+        L.polyline(toGCJ(full), { color: isHike ? COLOR.hike : COLOR.drive,
           weight: 2, opacity: .28, interactive: false }).addTo(layers.lines);
       }
-      L.polyline(g.map(q => [q[0], q[1]]), {
+      L.polyline(toGCJ(g), {
         color: isHike ? COLOR.hike : COLOR.drive, weight: isHike ? 3.5 : 4,
         opacity: .95, dashArray: isHike ? '1 7' : null, lineCap: 'round',
       }).bindTooltip(t.name + ' · ' + (t.distance || '') + ' km',
@@ -119,21 +154,28 @@
     drawPins(c);
     const pts = [];
     c.tracks.forEach(t => { const g = (t.adopted_points && t.adopted_points.length) ? t.adopted_points : t.points;
-      (g || []).forEach(q => pts.push([q[0], q[1]])); });
-    c.pois.forEach(p => pts.push([p.coord[0], p.coord[1]]));
-    drawLegs.forEach(l => (l.points || []).forEach(q => pts.push([q[0], q[1]])));
+      toGCJ(g).forEach(q => pts.push(q)); });
+    c.pois.forEach(p => pts.push(poiLL(p)));
+    drawLegs.forEach(l => toGCJ(l.points).forEach(q => pts.push(q)));
 
+    /* 露营点与"本次不去"的对照点放进独立图层：drawPins 重画时不会把它们擦掉 */
+    layers.camp.clearLayers();
     (GeoMap.CAMP_IDS() || []).forEach(cid => {
       const p = TRIP.places.filter(x => x.id === cid)[0];
       if (!p || !p.coord || p.coord[0] == null) return;
-      L.marker([p.coord[0], p.coord[1]], { interactive: false, icon: L.divIcon({ className: 'camp-wrap',
-        html: '<i class="camp-dot" title="' + p.name + ' · 可选露营点"></i>', iconSize: [10, 10], iconAnchor: [-9, 5] }) }).addTo(layers.pins);
+      L.marker(poiLL(p), { interactive: false, icon: L.divIcon({ className: 'camp-wrap',
+        html: '<i class="camp-dot" title="' + p.name + ' · 可选露营点"></i>', iconSize: [10, 10], iconAnchor: [-9, 5] }) })
+        .bindTooltip(p.name + ' · 可选露营点', { direction: 'top', offset: [0, -6], className: 'tip-line' })
+        .addTo(layers.camp);
     });
     const nr = TRIP.places.filter(x => x.id === 'naren')[0];
     if (nr && nr.coord && nr.coord[0] != null && state.day === 'all') {
-      L.marker([nr.coord[0], nr.coord[1]], { interactive: false, icon: L.divIcon({ className: 'ghost-wrap',
-        html: '<i class="gpin sight ghost-pin"><b></b></i><span class="gm-name ghost">那仁牧场（本次不去）</span>',
-        iconSize: [140, 22], iconAnchor: [11, 11] }) }).addTo(layers.pins);
+      L.marker(poiLL(nr), { interactive: false, icon: L.divIcon({ className: 'ghost-wrap',
+        html: '<i class="gpin sight ghost-pin"><b></b></i>',
+        iconSize: [22, 22], iconAnchor: [11, 11] }) })
+        .bindTooltip('那仁牧场 · 本次不去', { permanent: true, direction: 'right', offset: [12, 0],
+          className: 'tip-name prio4' })
+        .addTo(layers.camp);
     }
     /* 取景只由"范围"决定，与选哪套方案无关：切三个方案时比例完全一致，
        不会忽远忽近。只有选中某一天才按当天点列取景。 */
@@ -147,6 +189,7 @@
     if (note) {
       note.innerHTML = '';
     }
+    reclutter();
   }
 
 
@@ -162,7 +205,8 @@
     pois.forEach(p => {
       if (!p.coord || p.coord[0] == null) return;
       if (window.HIDE && window.HIDE[p.kind === 'stay' ? 'stay' : '']) return;
-      const cp = map.latLngToContainerPoint([p.coord[0], p.coord[1]]);
+      const llp = poiLL(p);
+      const cp = map.latLngToContainerPoint(llp);
       const size = map.getSize();
       const inView = cp.x > -30 && cp.y > -30 && cp.x < size.x + 30 && cp.y < size.y + 30;
       /* 四个方向轮流试：右→左→上→下；都挤才退成悬停标签 */
@@ -178,16 +222,43 @@
           if (!hit) { pick = DIRS[i]; taken.push(box); break; }
         }
       }
-      const mk = L.marker([p.coord[0], p.coord[1]],
+      const mk = L.marker(llp,
         { icon: pinIcon(p), title: p.name, riseOnHover: true, zIndexOffset: 400 });
+      const pc = 'tip-name prio' + (PRIO[p.kind] ?? 3);
       if (pick) {
-        mk.bindTooltip(p.name, { permanent: true, direction: pick[0], offset: pick[1], className: 'tip-name' });
+        mk.bindTooltip(p.name, { permanent: true, direction: pick[0], offset: pick[1], className: pc + ' tip-perm' });
       } else {
-        mk.bindTooltip(p.name, { direction: 'right', offset: [14, 0], className: 'tip-name' });
+        mk.bindTooltip(p.name, { direction: 'right', offset: [14, 0], className: pc });
       }
       mk.on('click', () => openDrawer(p)).addTo(layers.pins);
     });
   }
+
+  /* 收尾去重：标签是 DOM，投影估算会有几像素误差，所以落图后再用真实矩形判一次。
+     只藏撞车的标签，图钉始终保留；过夜点/枢纽优先。 */
+  let dcl = 0;
+  function declutterLabels() {
+    if (!map) return;
+    const host = map.getContainer();
+    const base = host.getBoundingClientRect();
+    const nodes = [].slice.call(document.querySelectorAll('#leafmap .leaflet-tooltip.tip-name.tip-perm'));
+    const items = nodes.map(n => {
+      const m = /prio(\d)/.exec(n.className);
+      return { n: n, p: m ? +m[1] : 3 };
+    }).sort((a, b) => a.p - b.p);          /* 过夜点 → 枢纽 → 道路 → 景点 */
+    const ok = [];
+    items.forEach(o => {
+      const n = o.n;
+      n.classList.remove('tip-hide');
+      const r = n.getBoundingClientRect();
+      const b = { x: r.left - base.left, y: r.top - base.top, w: r.width, h: r.height };
+      /* 只判"保不保留"：不做位移。挪位会把标签搬到另一个图钉旁边，比少一个标签更糟。 */
+      const hit = ok.some(q => !(b.x + b.w < q.x - 4 || b.x > q.x + q.w + 4
+                              || b.y + b.h < q.y - 3 || b.y > q.y + q.h + 3));
+      if (hit) n.classList.add('tip-hide'); else ok.push(b);
+    });
+  }
+  function reclutter() { clearTimeout(dcl); dcl = setTimeout(declutterLabels, 60); }
 
   function openDrawer(p) {
     const d = document.querySelector('#mapDrawer');
@@ -196,14 +267,14 @@
     const dayIds = p.days || [];
     const g = TRIP.guides.filter(x => x.place === p.id)[0];
     d.innerHTML = '<button class="drawer-x" aria-label="关闭">×</button>'
-      + (p.thumb ? '<img class="drawer-cover" src="' + esc2(p.thumb) + '" alt="">' : '<div class="drawer-cover none">无合格实拍</div>')
+      + (p.thumb ? '<img class="drawer-cover" src="' + esc2(p.thumb) + '" alt="">' : '<div class="drawer-cover none">暂无现场照片</div>')
       + '<div class="drawer-in"><p class="eyebrow">'
       + esc2((p.days || []).map(x => x.slice(0, 2).replace(/^0/, '') + '/' + x.slice(2).replace(/^0/, '')).join(' · ')
              || p.type || '地图速览') + '</p>'
       + '<h3>' + esc2(p.name) + '</h3><p>' + esc2(p.conclusion) + '</p>'
       + '<div class="drawer-meta"><span>' + esc2(p.hike || p.duration || p.type || '路过／枢纽') + '</span>'
       + (dayIds.length ? '<span>' + dayIds.map(x => x.slice(0, 2) + '/' + x.slice(2)).join('、') + '</span>' : '')
-      + '<span>' + (p.photo_count || 0) + ' 张实拍 · ' + esc2(p.confidence || '') + '</span></div>'
+      + '<span>' + (p.photo_count || 0) + ' 张现场照片' + (p.confidence ? ' · ' + esc2(p.confidence) : '') + '</span></div>'
       + '<p class="drawer-src">坐标来源：' + esc2(p.coord_source || '—') + '</p>'
       + (g ? '<button class="drawer-guide" data-guide="' + g.id + '">查看' + esc2(p.name) + '官方导览图 →</button>' : '')
       + '<a class="drawer-go" href="place.html?id=' + p.id + '">打开地点页（怎么玩／机位／避坑／原帖）→</a>'
@@ -222,39 +293,39 @@
     const host = document.querySelector('#leafmap');
     if (!host || !window.L) return false;
     try {
-      map = L.map(host, { zoomControl: false, attributionControl: false, minZoom: 7, maxZoom: 14,
+      map = L.map(host, { zoomControl: false, attributionControl: false, minZoom: 7, maxZoom: 18,
                           maxBounds: WORLD, maxBoundsViscosity: .9, zoomSnap: .5,
-                          preferCanvas: false }).fitBounds(BOUNDS.full, { padding: [30, 30] });
+                          preferCanvas: false }).fitBounds(BOUNDS.full, { padding: [30, 30], maxZoom: 11 });
       layers.base = L.tileLayer(
-        'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}',
-        { minZoom: 7, maxZoom: 14, bounds: WORLD, noWrap: true, opacity: .95 }).addTo(map);
+        'https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}',
+        { subdomains: ['1', '2', '3', '4'], minZoom: 7, maxZoom: 18, noWrap: true,
+          updateWhenIdle: true, updateWhenZooming: false, keepBuffer: 2,
+          attribution: '© 高德地图' }).addTo(map);
       layers.geo = L.layerGroup().addTo(map);
-      (GeoMap.raw.water || []).forEach(w => {
-        if (w.points && w.points.length > 3) L.polygon(w.points.map(q => [q[0], q[1]]),
-          { className: 'gm-water-leaf', interactive: false, fillOpacity: 1 }).addTo(layers.geo);
-      });
-      (GeoMap.raw.ctx || []).forEach(r2 => {
-        const ll = r2.points.map(q => [q[0], q[1]]);
-        L.polyline(ll, { color: '#cfccc2', weight: 3.2, opacity: .85, interactive: false }).addTo(layers.geo);
-        L.polyline(ll, { color: '#ffffff', weight: 1.9, opacity: .95, interactive: false }).addTo(layers.geo);
-      });
       layers.lines = L.layerGroup().addTo(map);
       layers.pins = L.layerGroup().addTo(map);
+      layers.camp = L.layerGroup().addTo(map);
       L.control.zoom({ position: 'bottomright' }).addTo(map);
       host.style.display = 'block';
       /* 画线/画点不依赖瓦片是否加载成功：先 ready，瓦片好了只负责好看 */
       document.body.setAttribute('data-map', 'leaflet');
-      ready = true;
+      ready = true; active = true;
       size();
       draw();
-      layers.base.on('load', function () { tileOk = true; size(); });
+      layers.base.on('load', function () {
+        tileOk = true; size();
+        document.body.setAttribute('data-map', 'leaflet');
+      });
       /* 容器在字体与栅格稳定前尺寸不可靠：不重算就会只画出一块瓦片 */
       function size() { if (map) { map.invalidateSize({ animate: false }); } }
       if (window.ResizeObserver) { new ResizeObserver(size).observe(host); }
       window.addEventListener('resize', size);
       window.addEventListener('planview', () => { if (ready) draw(true); });
-      map.on('zoomend', () => { if (lastPins) drawPins(lastPins); });
-      setTimeout(function () { size(); draw(); }, 80);
+      map.on('zoomend', () => { if (lastPins) { drawPins(lastPins); reclutter(); } });
+      map.on('moveend', reclutter);
+      /* 首帧别反复重画：等容器尺寸稳定后画一次，瓦片到位再补一次即可 */
+      setTimeout(function () { size(); draw(); }, 120);
+      setTimeout(function () { size(); draw(); reclutter(); }, 760);
       layers.base.on('tileerror', function () {
         if (tileOk === true) return;
         tileOk = false;
@@ -272,7 +343,7 @@
         if (low >= 2) giveUp('底图瓦片中断');
       }, 1600);
       function giveUp(why) {
-        ready = false; tileOk = false;
+        ready = false; active = false; tileOk = false;
         document.body.setAttribute('data-map', 'svg');
         const note = document.querySelector('#mapNote');
         if (note) note.innerHTML = why + '：已改用真实坐标 SVG<br>正文与数据不受影响';
@@ -289,6 +360,10 @@
     boot: boot,
     openDrawer: openDrawer,
     get ready() { return ready; },
+    get active() { return active; },
+    /* 外部改了筛选状态（图例开关等）后，让 Leaflet 按新状态重画。
+       没有这个入口，图例按钮只会重画背后的 SVG，用户看到的地图一动不动——这正是"筛选不生效"的根因。 */
+    refresh() { if (!ready) return; draw(); },
     select(day) { state.day = day || 'all'; state.focus = null; draw(); },
     plan(id) { state.plan = id || 'main'; state.day = 'all'; state.focus = null; draw(); },
     scope(s) { state.scope = s || 'core'; if (!ready) return;

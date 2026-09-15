@@ -1,13 +1,27 @@
 /* 首页：主方案优先的现场操作系统。地图用真实坐标与 KML 点列，没有公开轨迹的转场一律标成示意走向。 */
 (function () {
   const NS = 'http://www.w3.org/2000/svg';
-  const W = 1000, H = 600, M = 46;
+  /* 画幅与 SVG 用户单位 1:1 —— viewBox 跟着实际画幅走，
+     否则 1000×600 的固定比例会在宽屏里被居中压缩，左右各留一条空白带。 */
+  let W = 1000, H = 600, M = 42;
+  function fitSize() {
+    const el = document.getElementById('routeMap');
+    if (!el) return;
+    const b = el.getBoundingClientRect();
+    if (b.width > 40) W = Math.round(b.width);
+    if (b.height > 40) H = Math.round(b.height);
+    M = Math.max(18, Math.round(Math.min(W, H) * 0.07));
+  }
   let sel = 'all', scope = 'full', plan = 'main', focus = null;
 
   const P = TRIP.places, D = TRIP.days, T = TRIP.topics, R = TRIP.routes, G = TRIP.guides;
   /* 有 Leaflet 与底图瓦片就用真地图；失败则本文件的真实坐标 SVG 顶上（两套都不产生新事实） */
-  const AMAP = !!(window.TripAMap && TripAMap.boot());
-  const LEAF = !AMAP && !!(window.TripLeaf && TripLeaf.boot());
+  /* 本地 file:// 下高德底图无域名可鉴权，直接走离线真实路网（OSM 路网＋KML 实录）；
+     联网时用高德真底图，就绪事件会把它接上来。 */
+  const ONLINE = /^https?:$/.test(location.protocol);
+  /* 引擎不再由协议决定：本地 file:// 也能用高德公开瓦片＋Leaflet（已验证可加载）。
+     AMap JS API 只在高德脚本真正就绪时才接管，其余一律走 Leaflet，瓦片失效再退 SVG。 */
+  let AMAP = false;
   /* 引擎可能在运行中降级（高德瓦片失败→Leaflet），所以每次取"当前活着的引擎" */
   const ENG = () => (window.TripAMap && window.TripAMap.active) ? window.TripAMap
     : (window.TripLeaf && window.TripLeaf.ready) ? window.TripLeaf : null;
@@ -56,6 +70,16 @@
     const covered = tracks.length > 0;
     /* 三方案同图：没选日期时按方案视图取腿与点 */
     const planView = window.PLAN_VIEW || 'main';
+    /* 方案级轨迹过滤：备选A 不去白哈巴，就不能再画白哈巴→喀纳斯那条线。 */
+    const PLAN_NO_ROUTE = { alt_a: { baihaba_kanas_transfer: 1 }, alt_b: { xiaoshike_meilifeng: 1 } };
+    const banOf = id => PLAN_NO_ROUTE[id] || {};
+    const trackOk = (t, ids) => {
+      if (t.status === '不采用') return false;
+      if (ids.indexOf('alt_a') >= 0 && /白哈巴/.test(t.name || '')) return false;
+      if (ids.indexOf('alt_b') >= 0 && /小阿什克|美丽峰/.test(t.name || '')) return false;
+      return !ids.some(id => banOf(id)[t.route]);
+    };
+    tracks = tracks.filter(t => trackOk(t, planView === 'all' ? ['main', 'alt_a', 'alt_b'] : [planView]));
     let planLegs = null, planPois = null;
     if (!day && !focus) {
       const ids = planView === 'all' ? ['main', 'alt_a', 'alt_b'] : [planView];
@@ -86,15 +110,18 @@
     const lat = pts.map(c => c[0]), lng = pts.map(c => c[1]);
     let a = Math.min.apply(null, lng), b = Math.max.apply(null, lng);
     let c = Math.min.apply(null, lat), d = Math.max.apply(null, lat);
-    const px = Math.max((b - a) * .14, .012), py = Math.max((d - c) * .18, .012);
+    const px = Math.max((b - a) * .02, .004), py = Math.max((d - c) * .025, .004);
     a -= px; b += px; c -= py; d += py;
-    const k = Math.min((W - 2 * M) / (b - a), (H - 2 * M) / (d - c));
+    /* 等比缩放后让内容尽量填满画幅：横向富余就以横向为准，纵向富余就以纵向为准，
+       再把 SVG 视窗收成内容加一圈小边距。这样宽画幅不再左右留白、竖屏不再上下留白。 */
+    const fill = .88, mw = (W * (1 - fill)) / 2, mh = (H * (1 - fill)) / 2;
+    const k = Math.max((W - 2 * mw) / (b - a), (H - 2 * mh) / (d - c));
     const cx = (a + b) / 2, cy = (c + d) / 2;
     return p => [(p[1] - cx) * k + W / 2, H / 2 - (p[0] - cy) * k];
   }
   /* 同一天/同一范围下切方案：保持比例与中心，不跳 */
   function viewTransform(v) {
-    const key = (v.day ? v.day.id : 'all') + '|' + scope;
+    const key = (v.day ? v.day.id : 'all') + '|' + scope + '|' + W + 'x' + H;
     if (key === prevViewKey && prevAt) return prevAt;
     prevViewKey = key; prevAt = bounds(v); return prevAt;
   }
@@ -103,41 +130,68 @@
     const svg = $('#routeMap');
     if (!svg) return;
     const v = view();
+    fitSize();
     const at = viewTransform(v);
     svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
     svg.innerHTML = '';
     svg.append(el('rect', { width: W, height: H, class: 'map-bg' }));
-    GeoMap.drawSVG(svg, { dayId: v.day ? v.day.id : null, scope: scope,
+    GeoMap.drawSVG(svg, { w: W, h: H, dayId: v.day ? v.day.id : null, scope: scope,
       tracks: v.planLegs ? [] : v.tracks, pois: v.planPois || v.pois,
       planLegs: v.planLegs, colorByPlan: v.planView === 'all' }, at);
-    /* 标记：白环＋彩芯，标签带描边光晕，压在任何底图上都读得清 */
-    (v.planPois || v.pois).forEach(p => {
-      if (!p.coord || p.coord[0] == null) return;
-      const q = at(p.coord);
-      if (q[0] < -24 || q[1] < -24 || q[0] > W + 24 || q[1] > H + 24) return;
-      const cls = p.kind === 'stay' ? 'stay' : (p.kind === 'hub' ? 'hub' : (p.kind === 'road' ? 'road' : 'sight'));
-      const g = el('g', { class: 'gm-pin poi ' + cls,
-                          transform: 'translate(' + q[0].toFixed(1) + ' ' + q[1].toFixed(1) + ')' });
-      g.append(el('circle', { r: 7.5, class: 'gm-pin-ring' }));
-      g.append(el('circle', { r: 3.4, class: 'gm-pin-core' }));
-      const t = el('text', GeoMap.labelAttrs());
-      t.setAttribute('x', 11); t.setAttribute('y', 4); t.textContent = p.name;
-      g.append(t);
-      const ttl = el('title', {}); ttl.textContent = p.name + ' — 打开地点页'; g.append(ttl);
-      g.addEventListener('click', () => { location.href = 'place.html?id=' + p.id; });
-      svg.append(g);
-    });
+    /* 标记：白环＋彩芯，标签带描边光晕。
+       标签做贪心避让——湖区几个点在全程视图里会挤成一团，宁可少写一个也不叠字。 */
+    const ORD = { stay: 0, hub: 1, road: 2, sight: 3 };
+    const boxes = [];
+    const crowded = r => boxes.some(o => !(r[2] < o[0] || r[0] > o[2] || r[3] < o[1] || r[1] > o[3]));
+    (v.planPois || v.pois)
+      .filter(p => p.coord && p.coord[0] != null)
+      .map(p => ({ p: p, q: at(p.coord) }))
+      .filter(o => o.q[0] > -24 && o.q[1] > -24 && o.q[0] < W + 24 && o.q[1] < H + 24)
+      .sort((a, b) => (ORD[a.p.kind] || 3) - (ORD[b.p.kind] || 3))
+      .forEach(o => {
+        const p = o.p, q = o.q;
+        const cls = p.kind === 'stay' ? 'stay' : (p.kind === 'hub' ? 'hub' : (p.kind === 'road' ? 'road' : 'sight'));
+        const g = el('g', { class: 'gm-pin poi ' + cls,
+                            transform: 'translate(' + q[0].toFixed(1) + ' ' + q[1].toFixed(1) + ')' });
+        g.append(el('circle', { r: 7.5, class: 'gm-pin-ring' }));
+        g.append(el('circle', { r: 3.4, class: 'gm-pin-core' }));
+        const tw = p.name.length * 12.4 + 6;
+        const CAND = [[11, 4], [11, 21], [11, -13], [11, 38], [-11 - tw, 4], [-11 - tw, 21], [11, -30], [-11 - tw, -13]];
+        let spot = null;
+        for (let i = 0; i < CAND.length; i++) {
+          const c = CAND[i];
+          const r = [q[0] + c[0] - 3, q[1] + c[1] - 12, q[0] + c[0] - 3 + tw, q[1] + c[1] + 4];
+          if (!crowded(r)) { spot = c; boxes.push(r); break; }
+        }
+        if (!spot && cls === 'stay') {                       /* 过夜点永远保留标签 */
+          spot = CAND[0];
+          boxes.push([q[0] + 8, q[1] - 12, q[0] + 8 + tw, q[1] + 4]);
+        }
+        if (spot) {
+          const t = el('text', GeoMap.labelAttrs());
+          t.setAttribute('x', spot[0]); t.setAttribute('y', spot[1]); t.textContent = p.name;
+          g.append(t);
+        }
+        const ttl = el('title', {});
+        ttl.textContent = p.name + ' — 打开地点页';
+        g.append(ttl);
+        g.addEventListener('click', () => { location.href = 'place.html?id=' + p.id; });
+        svg.append(g);
+      });
     /* 图例分类按"这一天/这个范围一共有哪些走法"算，和当前开关无关：
        否则点掉一类，按钮会跟着消失，看起来就像筛选失效。 */
     const dayId = v.day ? v.day.id : null;
     const ids2 = v.day ? [plan] : (v.planView === 'all' ? ['main', 'alt_a', 'alt_b'] : [v.planView]);
     const kinds = {};
     GeoMap.planLegsRaw(ids2, scope, dayId).forEach(l => { kinds[l.src === 'schematic' ? 'schem' : l.mode] = 1; });
-    TK.forEach(t => { if (v.day ? v.day.tracks.indexOf(t.id) >= 0 : USED[t.id])
-      kinds[/行车|公路|通行/.test(t.kind) ? 'drive' : 'hike'] = 1; });
+    TK.forEach(t => { if (v.day ? v.day.tracks.indexOf(t.id) >= 0 : USED[t.id]) {
+      /* 图例键必须和 map.js 实际用来过滤的键完全一致：
+         统一走 GeoMap.modeOf（kind 优先），否则按钮点掉的是 hike、被隐藏的是 drive，看起来就是筛选失效 */
+      const mm = GeoMap.modeOf(t.kind, t.name);
+      kinds[(mm === 'bus' || mm === 'train') ? mm : (mm === 'shuttle' ? 'shuttle' : (mm === 'drive' ? 'drive' : 'hike'))] = 1; } });
     if ((v.planPois || v.pois).some(p => p.kind === 'stay')) kinds.stay = 1;
     if (!Object.keys(kinds).length) { kinds.drive = 1; kinds.hike = 1; }
-    const LBL = { drive: '包车 · 真实道路', shuttle: '区间车 · 真实道路', hike: '徒步实录',
+    const LBL = { drive: '包车 · 导航道路', shuttle: '区间车 · 导航道路', hike: '徒步路线',
                   schem: '走向示意', stay: '过夜点' };
     const lg = $('#mapLegend');
     if (lg) {
@@ -151,16 +205,44 @@
             + '</button>').join('') + '</div>';
       $$('#mapLegend [data-lg]').forEach(b => b.addEventListener('click', () => {
         window.HIDE = window.HIDE || {};
-        window.HIDE[b.dataset.lg] = !window.HIDE[b.dataset.lg];
-        drawMap();
+        const k = b.dataset.lg;
+        window.HIDE[k] = !window.HIDE[k];
+        b.classList.toggle('off', !!window.HIDE[k]);
+        b.setAttribute('aria-pressed', window.HIDE[k] ? 'false' : 'true');
+        /* 真正在跑的是 Leaflet／高德时，必须让"当前活着的引擎"按新状态重画；
+           以前这里只重画背后的 SVG，读者看到的地图纹丝不动，所以判定"图例筛选不生效"。 */
+        const e = ENG();
+        if (e && e.refresh) { try { e.refresh(); } catch (err) { drawMap(); } } else { drawMap(); }
       }));
     }
     const mt = $('#mapTitle');
     if (mt) mt.textContent = (v.day ? v.day.date + ' · 当天动线'
       : (GeoMap.PLAN_NAME[v.planView] || (TRIP.plans.filter(x => x.id === plan)[0] || {}).name)
         + ' · ' + (scope === 'full' ? '含阿禾全线' : '核心区域'));
+    /* 右下角放本视图的真实里程合计（腿的 km 与轨迹原生统计），
+       而不是留一块空地或写一句说明书。 */
     const note = $('#mapNote');
-    if (note) note.textContent = '';
+    if (note) {
+      let drive = 0;
+      GeoMap.planLegsRaw(ids2, scope, dayId).forEach(l => {
+        if (l.src === 'schematic') return;
+        if (l.mode === 'drive' || l.mode === 'shuttle') drive += (l.km || 0);
+      });
+      let hike = 0;
+      const hk = (v.day ? v.day.tracks.map(trackById).filter(Boolean) : TK.filter(t => USED[t.id]))
+        .filter(t => GeoMap.modeOf(t.kind, t.name) === 'hike');
+      hk.forEach(t => {
+        const ak = parseFloat(String(t.adopted_km == null ? '' : t.adopted_km).replace(/[^0-9.]/g, ''));
+        hike += isFinite(ak) ? ak : (t.distance || 0);
+      });
+      const total = drive + hike;
+      note.innerHTML = total
+        ? '<div class="map-stats">'
+          + '<span><i>车行／区间车</i><b>' + Math.round(drive) + ' km</b></span>'
+          + (hike ? '<span><i>徒步</i><b>' + (Math.round(hike * 10) / 10) + ' km</b></span>' : '')
+          + '<span><i>合计</i><b>' + Math.round(total) + ' km</b></span></div>'
+        : '';
+    }
 
     const fk = $('#focusTrack');
     if (!fk) return;
@@ -277,25 +359,51 @@
       + '<p class="cmp-note">当前高亮的是地图上正在看的方案；切换首屏方案按钮，高亮与地图一起变。</p>';
   }
 
-  /* ─ 逐日：九天各一张卡，不用大表格 ─────────────────────────────────── */
+  /* ─ 九天总表：日程与当天花销同一条线，一眼看完 ─────────────────────── */
+  /* 逐日口径：过夜地点、住宿区间、门票（元/人）。
+     门票口径＝喀纳斯一进 230＋跨 48 小时补差 35＋白哈巴 30＋禾木 50，与费用页票种基线一致。 */
+  const DAY_TICKET = { '0924': 0, '0925': 50, '0926': 0, '0927': 30, '0928': 230,
+    '0929': 0, '0930': 35, '1001': 0, '1002': 0 };
+  const DAY_STAY_TEXT = { '0924': '含票', '0925': '0—1000', '0926': '≤500', '0927': '0—500',
+    '0928': '≤600', '0929': '≤600', '0930': '≤500', '1001': '含票', '1002': '—' };
+  const DAY_BED = { '0924': '夜火车', '0925': '禾木', '0926': '贾登峪', '0927': '白哈巴',
+    '0928': '喀纳斯', '0929': '喀纳斯', '0930': '贾登峪', '1001': 'K9752 卧铺', '1002': '—' };
+  const bedPlace = d => DAY_BED[d.id] || String(d.sleep || '').split('（')[0] || '—';
+  const bedCost = d => DAY_STAY_TEXT[d.id] || '—';
+  const dayTicket = d => (DAY_TICKET[d.id] == null ? 0 : DAY_TICKET[d.id]);
+
   function feed() {
     const host = $('#dayFeed');
     if (!host) return;
-    const nights = (TRIP.plans[0] || {}).nights || {};
-    host.innerHTML = '<div class="day-tiles">' + D.map(d => {
-      const stay = nights[d.id] || String(d.sleep || '').split('（')[0];
+    const rows = D.map(d => {
+      const quote = /包车|整车/.test(d.move || '');
       const ps = (d.places || []).map(placeById).filter(Boolean).slice(0, 3);
-      return '<a class="day-tile" href="day.html?id=' + d.id + '">'
-        + '<header><b>' + d.date + '</b><span>' + esc(d.week) + '</span></header>'
-        + '<p class="dt-head">' + esc(d.headline) + '</p>'
-        + '<div class="dt-figs"><div><i>移动</i><span>' + esc(d.move) + '</span></div>'
-        + '<div><i>过夜</i><span>' + esc(stay) + '</span></div></div>'
-        + (ps.length ? '<div class="dt-tags">' + ps.map(p => '<span>' + esc(p.name) + '</span>').join('') + '</div>' : '')
-        + '<footer><span class="dt-cut">先删：' + esc(d.cut_first) + '</span><em>当日日程 →</em></footer></a>';
-    }).join('') + '</div>';
+      const tk = dayTicket(d);
+      return '<tr data-day="' + d.id + '">'
+        + '<td class="c-date"><b>' + d.date + '</b><span>' + esc(d.week) + '</span></td>'
+        + '<td class="c-topic"><b>' + esc(d.headline) + '</b>'
+        + ps.map(p => '<span class="tag">' + esc(p.name) + '</span>').join('') + '</td>'
+        + '<td class="c-move">' + esc(d.move || '—') + '</td>'
+        + '<td class="c-stay">' + esc(bedPlace(d)) + '</td>'
+        + '<td class="c-num">' + esc(bedCost(d)) + '</td>'
+        + '<td class="c-num free">50—60</td>'
+        + '<td class="c-num">' + (quote ? '<em class="q-chip">待报价</em>'
+            : '<span class="free">含票内</span>') + '</td>'
+        + '<td class="c-num">' + (tk ? tk : '<span class="free">0</span>') + '</td>'
+        + '<td class="c-go">→</td></tr>';
+    }).join('');
+    host.innerHTML = '<div class="dtable-wrap"><table class="dtable">'
+      + '<thead><tr><th>日期</th><th>当天安排</th><th>移动</th><th>过夜</th>'
+      + '<th class="c-num">住</th><th class="c-num">吃</th><th class="c-num">交通</th>'
+      + '<th class="c-num">门票</th><th></th></tr></thead><tbody>' + rows + '</tbody></table>'
+      + '<p class="dtable-note">住、吃、门票均为元/人：住按整间或帐篷兜底预估，露营记 0；'
+      + '吃 50—60 元/人·天；门票合计 345 元/人（喀纳斯一进 230＋跨 48 小时补差 35＋白哈巴 30＋禾木 50）。'
+      + '「待报价」是四段整车包车，拿到司机报价后到费用页重算。</p></div>';
+    host.querySelectorAll('tr[data-day]').forEach(tr => tr.addEventListener('click',
+      () => { location.href = 'day.html?id=' + tr.dataset.day; }));
   }
 
-  /* ─ 费用：关键数字 + 按天拆开（和日程同一套日期）───────────────────── */
+  /* ─ 费用：关键数字 + 按天花费条，点一天直接跳到当天明细 ─────────────── */
   function money() {
     const host = $('#moneyList');
     if (!host) return;
@@ -310,27 +418,31 @@
       ['餐饮', '500—600 元/人', '长徒步日路餐在阿勒泰补齐'],
       ['地面总目标', '≤3000 元/人', '往返火车实付另计'],
     ];
-    const stay = {};
-    (B.variable_stay || []).forEach(x => { if (x && x.night) stay[x.night] = x; });
-    const rows = D.filter(d => d.id !== '1002').map(d => {
-      const st = stay[d.id];
-      const stayTxt = st ? String(st.main_value || '').split('；')[0].slice(0, 20)
-        : (d.id === '0924' ? '火车卧铺' : String(d.sleep || '').split('（')[0]);
-      const needQuote = /包车|整车/.test(d.move || '');
-      const ticket = /白哈巴/.test(d.headline || '') ? '30'
-        : (/禾木/.test(d.headline || '') ? '50' : (/喀纳斯/.test(d.headline || '') ? '230' : '0'));
-      return '<tr><td><b>' + d.date + '</b><span class="dc-w">' + esc(d.week) + '</span></td>'
-        + '<td>' + esc(stayTxt) + '</td><td>50—60</td>'
-        + '<td>' + (needQuote ? '<em class="dc-quote">待报价</em>' : '含票内') + '</td>'
-        + '<td class="dc-num">' + ticket + '</td></tr>';
+    const strip = D.map(d => {
+      const bed = bedPlace(d);
+      const ticket = dayTicket(d);
+      const per = 55 + ticket;
+      const quote = /包车|整车/.test(d.move || '');
+      return '<button class="sp-day' + (quote ? ' has-quote' : '') + '" data-sp="' + d.id + '">'
+        + '<i>' + esc(d.date) + '</i>'
+        + '<b>' + per + '<em>元/人</em></b>'
+        + '<span>' + esc(bed) + ' · 住 ' + esc(bedCost(d))
+        + (ticket ? ' · 票 ' + ticket : '') + (quote ? ' · 车待报价' : '') + '</span></button>';
     }).join('');
     host.innerHTML = '<div class="money-grid">' + cells.map(x =>
         '<div class="money-cell"><i>' + x[0] + '</i><b>' + x[1] + '</b><span>' + x[2] + '</span></div>').join('')
-      + '</div><div class="money-days"><div class="md-head"><b>按天算</b>'
-      + '<span>元／人；住按「整间≤600 或帐篷」预估</span>'
-      + '<a class="btn-line small" href="budget.html">费用计算器 →</a></div>'
-      + '<div class="tbl-wrap"><table class="cmp cost-tbl"><thead><tr><th>日期</th><th>住（预估）</th>'
-      + '<th>吃</th><th>交通</th><th class="num">门票</th></tr></thead><tbody>' + rows + '</tbody></table></div></div>';
+      + '</div>'
+      + '<div class="spend-rail"><p class="spend-cap">按天看：吃 55 元/人·天 ＋ 当天门票，住另计；点一天跳到当天明细</p>'
+      + '<div class="spend-strip">' + strip + '</div></div>'
+      + '<div class="money-foot"><a class="btn-line small" href="budget.html">费用计算器 →</a>'
+      + '<p>四段整车包车待司机报价，拿到后进费用页重算。</p></div>';
+    host.querySelectorAll('[data-sp]').forEach(b => b.addEventListener('click', () => {
+      const row = document.querySelector('#dayFeed tr[data-day="' + b.dataset.sp + '"]');
+      if (!row) { location.href = 'day.html?id=' + b.dataset.sp; return; }
+      row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      row.classList.add('flash');
+      setTimeout(() => row.classList.remove('flash'), 1600);
+    }));
   }
 
   /* ─ 出发前：五件必办 ───────────────────────────────────────────────── */
@@ -415,8 +527,14 @@
       + '<div class="leg-figs">'
       + '<div><i>里程</i><b>' + (km ? km + ' km' : '—') + '</b></div>'
       + '<div><i>预计</i><b>' + t + '</b></div>'
-      + '<div><i>方式</i><b>' + esc(MODE_TXT[leg.mode] || leg.mode || '—') + '</b></div></div>'
+      + '<div><i>方式</i><b>' + esc(MODE_TXT[leg.mode] || leg.mode || '—') + '</b></div>'
+      + (leg.gain != null ? '<div><i>累计爬升</i><b>+' + leg.gain + ' m</b></div>' : '')
+      + (leg.loss != null ? '<div><i>累计下降</i><b>−' + leg.loss + ' m</b></div>' : '')
+      + (leg.elevation && leg.elevation.length > 1
+          ? '<div><i>海拔区间</i><b>' + leg.elevation[0] + '—' + leg.elevation[1] + ' m</b></div>' : '')
+      + '</div>'
       + '<p class="drawer-src">几何来源：' + esc(SRC_TXT[src] || src) + '</p>'
+      + (leg.adoptedNote ? '<p class="drawer-src">采用段：' + esc(leg.adoptedNote) + '</p>' : '')
       + '<p class="drawer-src">估价：' + (free ? '已含票内／不产生包车费' : '整车待司机报价，拿到后进费用页重算') + '</p>'
       + (d ? '<a class="drawer-go" href="day.html?id=' + d.id + '">打开 ' + esc(d.date) + ' 完整日程 →</a>' : '')
       + '<a class="drawer-go" href="budget.html">费用怎么算 →</a></div>';
@@ -433,6 +551,18 @@
     const e1 = ENG(); if (e1) e1.scope(scope);
     drawMap();
   }));
+  /* 引擎启动顺序：高德 JS API（已就绪时）→ Leaflet＋高德瓦片 → app.js 的 SVG。
+     本地 file:// 直接走第二条（公开瓦片无需域名鉴权，已实测可用）。 */
+  function bootEngine() {
+    if (window.AMap && window.TripAMap && TripAMap.boot()) { AMAP = true; }
+    else if (window.TripLeaf && TripLeaf.boot()) { AMAP = false; }
+  }
+  window.addEventListener('amap-ready', function () {
+    if (AMAP) return;
+    if (window.TripAMap && TripAMap.boot()) { AMAP = true; try { drawMap(); } catch (e) {} }
+  });
+
+  bootEngine();
   selectDay('all');
   addEventListener('resize', drawMap);
 

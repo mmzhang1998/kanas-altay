@@ -179,6 +179,7 @@
 
   function boot() {
     if (!window.AMap) return false;
+    if (!/^https?:$/.test(location.protocol)) return false;   /* 本地无域名可鉴权，交给离线路网 */
     const host = document.querySelector('#leafmap');
     if (!host) return false;
     try {
@@ -213,13 +214,15 @@
               + '在高德控制台把本域名加入 Key 白名单即可切回高德底图';
           }
         }
-      }, 5000);
+      }, 2500);
       return true;
     } catch (e) { return false; }
   }
 
   window.TripAMap = {
     boot: boot,
+    /* 与 Leaflet 同名接口：外部（图例等）改了筛选状态后统一调 refresh()。 */
+    refresh() { if (window.TripAMap.active) draw(); },
     select(day) { state.day = day || 'all'; draw(); },
     plan(id) { state.day = 'all'; window.PLAN_VIEW = id; draw(); },
     scope(s) { state.scope = s; draw(); },

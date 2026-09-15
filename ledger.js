@@ -57,7 +57,7 @@
         + '<span>' + (t.missing ? '另有 ' + t.missing + ' 段整车未报价，不能当 0 元' : '四段整车已填齐') + '</span></div></div>';
       const sc = b.scenarios_v4.filter(s => s.recomputed)[0];
       $('#scenNow').innerHTML = '<p class="big">本页当前组合：<b>' + money(t.ground) + '</b> 三人 · '
-        + money(t.ground / 3) + ' 每人（不含火车）。主方案文档口径 ' + esc(sc.three_total) + '／人 '
+        + money(t.ground / 3) + ' 每人（不含火车）。主方案估算 ' + esc(sc.three_total) + '／人 '
         + esc(sc.per_person) + '，差额全部来自你刚才拨动的开关。</p>';
     }
 
@@ -89,23 +89,21 @@
 
     c += sec2('当前合计', '<div id="ledger"></div><div id="scenNow"></div>', '合计');
 
-    c += sec2('A 类：已确认或已有明确报价', rowTable(b.fixed, [['项目', 'item'], ['单价', 'unit_price'],
+    c += sec2('已确认或有明确报价', rowTable(b.fixed, [['项目', 'item'], ['单价', 'unit_price'],
       ['计价', 'unit'], ['三人合计', 'three_total'], ['每人', 'per_person'],
-      ['性质', r => esc(r.nature || '') + '<small class="src">' + esc(r.source || '') + '</small>']]), '已确认');
-    c += sec2('B 类：有历史依据，2026 必须复核', rowTable(b.review, [['项目', 'item'], ['单价', 'unit_price'],
+      ['依据', r => esc(polishText(r.nature || ''))]]), '已确认');
+    c += sec2('有历史价格，出行前需现场确认', rowTable(b.review, [['项目', 'item'], ['单价', 'unit_price'],
       ['三人合计', 'three_total'], ['每人', 'per_person'],
       ['复核动作', r => '<span class="ask">' + esc(r.action || '') + '</span>']]), '需复核');
-    c += sec2('D 类：现在不许填数字', rowTable(b.unknown, [['项目', 'item'], ['为什么是 D', 'why'],
+    c += sec2('现在还不能定价的项目', rowTable(b.unknown, [['项目', 'item'], ['为什么先不定价', 'why'],
       ['量级参照', 'anchor'], ['询价动作', r => '<span class="ask">' + esc(r.ask || '') + '</span>']]), '待报价');
-    c += sec2('三情景（文档原口径）', '<div class="scen-grid">' + b.scenarios_v4.map(s =>
+    c += sec2('三种情景', '<div class="scen-grid">' + b.scenarios_v4.map(s =>
       '<article class="' + (s.recomputed ? 'now' : '') + '"><h3>' + esc(s.name) + '</h3>'
       + '<p class="der">' + esc(s.derivation) + '</p>'
       + '<div class="scen-nums"><span><i>三人</i><b>' + esc(s.three_total) + '</b></span>'
       + '<span><i>每人</i><b>' + esc(s.per_person) + '</b></span></div>'
       + '<p class="cav">' + esc(s.caveat) + '</p></article>').join('') + '</div>'
       + '<p class="rule">' + esc(b.scenario_warning) + '</p>', '情景');
-    c += sec2('逐晚住宿口径（底库）', rowTable(b.variable_stay, [['晚', 'night'], ['地点', 'place'],
-      ['露营可行性', 'camp_ok'], ['主案取值', 'main_value'], ['历史样本', 'samples']]), '每晚');
     c += sec2('计算公式', '<p class="formula">' + esc(b.formula) + '</p>'
       + '<ul class="detail-list">' + b.rules.map(r => '<li>' + esc(r) + '</li>').join('') + '</ul>', '口径');
     $('#content').innerHTML = '<section class="detail-section"><h2>每天大概花多少</h2><div id="dayCost"></div></section>' + c;
@@ -131,7 +129,7 @@
       + b.ticket_baseline.three_total + ' 元/三人</div>'
       + '<div><small>已含票内</small>' + esc(b.ticket_baseline.note) + '</div>'
       + '<div><small>最大缺口</small>X3：贾登峪→白哈巴整车（无可靠成交）</div>'
-      + '<div><small>逐项台账</small><a href="tasks.html">15 项待办 →</a></div>'
+      + '<div><small>逐项待办</small><a href="tasks.html">15 项待办 →</a></div>'
       + '<div><small>回行程</small><a href="index.html">首页 →</a></div>';
   }
 
@@ -154,8 +152,8 @@
     document.title = '行前与现场事项｜我们的阿勒泰';
     $('#hero').innerHTML = '<div><p class="eyebrow">出发前 · 15 项</p>'
       + '<h1>出发前真正要办的，就这 15 件</h1>'
-      + '<p class="verdict">每项都写明谁负责、几号前办完、办成之后要留下什么凭据，以及它影响哪一天和多少钱。'
-      + '底库另有 228 条现场核验项，不在这里打扰你。</p></div>';
+      + '<p class="verdict">每项都写明谁负责、几号前办完、办成之后要留下什么凭据，'
+      + '以及它影响哪一天和多少钱。</p></div>';
     const byOwner = {};
     t.forEach(x => { (byOwner[x.owner] = byOwner[x.owner] || []).push(x); });
     $('#content').innerHTML = sec2('按时间排', '<ol class="task-list">' + t.map(x =>
@@ -168,7 +166,7 @@
         return day ? '<a href="day.html?id=' + day.id + '">' + esc(d) + '</a>' : esc(d);
       }).join(' ') + '</span></div>'
       + '<p class="tk-result"><b>办成标准：</b>' + esc(x.result) + '</p>'
-      + '<p class="tk-src">来源：' + esc(x.source) + '</p></div></li>').join('') + '</ol>', '顺序');
+      + '</div></li>').join('') + '</ol>', '顺序');
     $('#facts').innerHTML = '<h3>按人分工</h3>'
       + Object.keys(byOwner).map(k => '<div><small>' + esc(k) + '</small>'
         + byOwner[k].map(x => x.id).join(' · ') + '</div>').join('')
@@ -188,8 +186,25 @@
     const stay = {};
     (B.variable_stay || []).forEach(x => { if (x && x.night) stay[x.night] = x; });
     const rows = (TRIP.days || []).filter(d => d.id !== '1002').map(d => {
-      const st = stay[d.id];
-      const stayTxt = st ? String(st.main_value || '').split('；')[0].slice(0, 20) : (d.id === '0924' ? '火车卧铺' : '—');
+      const st = stay[d.date] || stay[d.id];
+      let stayTxt = '—';
+      if (st) {
+        const v = String(st.main_value || '');
+        const camp = /露营\s*0\s*元/.test(v);
+        const num = ((v.match(/主案[取：:]*\s*(\d{2,4})\s*元/) || v.match(/住店\s*(\d{2,4})\s*元\/间/)
+          || v.match(/(\d{2,4})\s*元\/间/) || [])[1]) || '';
+        stayTxt = camp ? ('露营 0 元｜店 ' + (num ? '约 ' + num + ' 元/间' : '需询价'))
+                       : (num ? '店 约 ' + num + ' 元/间' : '住店需询价');
+      } else if (d.id === '0924') { stayTxt = '火车卧铺'; }
+      else if (d.sleep) {
+        const sl = String(d.sleep);
+        if (/继续住/.test(sl)) stayTxt = sl.replace(/继续住/, '') + '（续住）';
+        else if (/露营/.test(sl)) {
+          const who = (sl.match(/^([^，,、／\/]+?)露营/) || [])[1] || '';
+          const cap = (sl.match(/≤\s*(\d{2,4})/) || [])[1] || '';
+          stayTxt = (who ? who + ' · ' : '') + '露营｜店' + (cap ? ' ≤' + cap + ' 元' : '');
+        } else stayTxt = sl.split(/[，,；;]/)[0];
+      }
       const move = (d.move || '');
       const traffic = /包车|整车/.test(move) ? '待报价'
         : (/区间车|摆渡|村公交/.test(move) ? '含票内' : '含票内');
@@ -198,8 +213,8 @@
       return '<tr><td><b>' + d.date + '</b></td><td>' + esc(stayTxt) + '</td><td>50—60 元/人</td><td>'
         + esc(traffic) + '</td><td>' + esc(ticket) + '</td></tr>';
     }).join('');
-    host.innerHTML = '<table><thead><tr><th>日期</th><th>住（预估）</th><th>吃</th><th>交通</th><th>门票</th></tr></thead>'
-      + '<tbody>' + rows + '</tbody></table>'
+    host.innerHTML = '<div class="wrap-tbl days-tbl"><table><thead><tr><th>日期</th><th>住（预估）</th><th>吃</th><th>交通</th><th>门票</th></tr></thead>'
+      + '<tbody>' + rows + '</tbody></table></div>'
       + '<p class="dc-note">住按"整间≤600 否则帐篷"预估；标"待报价"的四段拿到司机报价后在上方填入即自动重算。</p>';
   })();
   dropEmptySections();

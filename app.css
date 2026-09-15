@@ -1,6 +1,6 @@
-:root{--ink:#17201e;--forest:#102b27;--paper:#f6f7f4;--white:#fff;--muted:#68716d;--line:#dce1dc;--gold:#d6a750;--gold2:#f0d59a;--river:#5e93a5;--hike:#d06b4e;--shuttle:#66845f;--shadow:0 22px 60px rgba(16,43,39,.12)}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.65 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}button,a{font:inherit}button{cursor:pointer}.site-header{height:72px;padding:0 max(24px,4vw);display:flex;align-items:center;gap:42px;position:sticky;top:0;z-index:50;background:#f6f7f4e8;backdrop-filter:blur(18px);border-bottom:1px solid #17201e17}.brand{text-decoration:none;font-weight:850}.brand span{display:block;font:700 10px/1 ui-monospace,monospace;letter-spacing:.18em;color:#64726c;margin-bottom:4px}.site-header nav{display:flex;gap:24px}.site-header nav a{text-decoration:none;color:#65706b;font-size:14px}.today-button{margin-left:auto;border:0;background:var(--forest);color:#fff;padding:10px 15px;border-radius:999px}.journey-shell{padding:64px max(24px,4vw) 30px;max-width:1640px;margin:auto}.journey-heading{display:grid;grid-template-columns:1.35fr .65fr;gap:60px;align-items:end;margin-bottom:30px}.eyebrow,.map-kicker{margin:0 0 8px;font:700 11px/1.2 ui-monospace,monospace;letter-spacing:.16em;text-transform:uppercase;color:#76807b}.journey-heading h1{margin:0;max-width:920px;font-size:clamp(42px,5.7vw,84px);line-height:1.02;letter-spacing:-.055em}.trip-facts{display:grid;grid-template-columns:repeat(2,1fr);border-top:1px solid var(--line)}.trip-facts span{padding:15px 0;border-bottom:1px solid var(--line);color:var(--muted);font-size:13px}.trip-facts b{font-size:24px;color:var(--forest);display:block}.journey-workspace{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(340px,.6fr);min-height:620px;background:#fff;border:1px solid var(--line);box-shadow:var(--shadow)}.map-card{min-width:0;display:flex;flex-direction:column}.map-toolbar{height:70px;padding:0 20px 0 24px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line)}.map-toolbar b{display:block;font-size:17px}.map-kicker{font-size:9px}.map-actions{display:flex;background:#eef1ed;padding:3px;border-radius:999px}.map-actions button{border:0;background:transparent;padding:7px 11px;border-radius:999px;color:#66706b;font-size:12px}.map-actions button.active{background:#fff;color:var(--forest);box-shadow:0 2px 10px #0001}.map-stage{height:550px;position:relative;overflow:hidden;background:linear-gradient(145deg,#e7ece7,#dfe7e4)}#routeMap{width:100%;height:100%;display:block}.map-bg{fill:#e6ebe6}.terrain-line{fill:none;stroke:#c9d5cf;stroke-width:1;opacity:.7}.route-line{fill:none;stroke-linecap:round;stroke-linejoin:round}.route-line.drive{stroke:var(--gold);stroke-width:5}.route-line.shuttle{stroke:var(--shuttle);stroke-width:5;stroke-dasharray:8 7}.route-line.hike{stroke:var(--hike);stroke-width:4;stroke-dasharray:3 7}.poi{cursor:pointer}.poi circle{stroke:#fff;stroke-width:3;filter:drop-shadow(0 4px 5px #18302933)}.poi text{font-size:12px;font-weight:750;paint-order:stroke;stroke:#eef2ee;stroke-width:4;fill:#26342f}.map-legend{position:absolute;left:18px;bottom:17px;display:flex;gap:14px;background:#102b27e8;color:#fff;padding:9px 12px;border-radius:7px;font-size:11px}.map-legend span:before{content:"";display:inline-block;width:17px;height:3px;margin-right:6px;vertical-align:middle;background:currentColor}.map-legend .drive{color:var(--gold)}.map-legend .shuttle{color:#9db394}.map-legend .hike{color:#ef8a6c}.map-legend .stay{color:#fff}.map-legend .stay:before{width:8px;height:8px;border-radius:50%}.map-note{position:absolute;right:16px;bottom:17px;background:#fffd;padding:7px 10px;border-radius:5px;color:#65706b;font-size:10px}.day-panel{padding:30px;background:var(--forest);color:#fff;display:flex;flex-direction:column}.panel-top{display:flex;justify-content:space-between}.panel-top .eyebrow{color:#9fb2aa}.panel-top button{border:0;background:transparent;color:#aebeb8;font-size:12px}.day-panel h2{font-size:30px;line-height:1.12;letter-spacing:-.035em;margin:18px 0 13px}.day-panel>p{color:#c3d0cb;margin:0 0 22px}.schedule-preview{border-top:1px solid #ffffff24}.schedule-item{display:grid;grid-template-columns:66px 1fr;gap:12px;padding:11px 0;border-bottom:1px solid #ffffff1d}.schedule-item time{color:var(--gold2);font:700 12px/1.6 ui-monospace,monospace}.schedule-item b{font-size:14px}.schedule-item small{display:block;color:#9fb2aa}.day-meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:18px}.day-meta span{font-size:11px;color:#c3d0cb;border:1px solid #ffffff25;padding:4px 7px;border-radius:99px}.primary-link{color:#fff;text-decoration:none;font-weight:750;margin-top:auto;padding-top:22px;display:flex;justify-content:space-between;border-top:1px solid #ffffff24}.date-rail{display:grid;grid-template-columns:repeat(9,1fr);gap:1px;margin-top:18px;background:var(--line);border:1px solid var(--line)}.date-chip{border:0;background:#fff;padding:14px 12px;text-align:left;min-height:86px}.date-chip small{display:block;color:#87908c}.date-chip b{display:block;margin:3px 0}.date-chip span{font-size:11px;color:#69736f;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.date-chip.active{background:var(--forest);color:#fff}.date-chip.active small,.date-chip.active span{color:#b9c8c2}.content-block{max-width:1540px;margin:auto;padding:90px max(24px,4vw)}.section-heading{display:flex;justify-content:space-between;align-items:end;gap:50px;margin-bottom:30px}.section-heading h2{font-size:clamp(34px,4.2vw,58px);line-height:1.03;letter-spacing:-.045em;margin:0}.section-heading>p{max-width:510px;color:var(--muted);margin:0}.day-feed{border-top:1px solid #cbd2cd}.day-card{display:grid;grid-template-columns:110px 1.25fr .85fr .85fr;gap:24px;padding:28px 0;border-bottom:1px solid #cbd2cd}.day-number small{display:block;color:var(--muted)}.day-number b{font-size:30px}.day-card h3{font-size:24px;margin:0 0 6px}.day-card p{margin:0;color:#5d6762}.day-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}.mini-link{border:1px solid #ccd4cf;background:#fff;text-decoration:none;color:var(--forest);padding:5px 8px;font-size:12px}.fact-list small{display:block;color:#87908c}.fact-list b{display:block;margin-bottom:10px}.risk-note{padding:13px;background:#efe5d2;color:#654d25;font-size:13px}.topics-block{max-width:none;background:var(--forest);color:#fff}.topics-block>.section-heading,.topics-block>.topic-tabs,.topics-block>.topic-feature,.topics-block>.topic-grid{max-width:1420px;margin-left:auto;margin-right:auto}.topics-block .eyebrow,.topics-block .section-heading>p{color:#aebeb8}.topic-tabs{display:flex;gap:7px;overflow:auto;padding-bottom:14px}.topic-tabs button{border:1px solid #ffffff27;background:transparent;color:#cad5d1;padding:8px 12px;border-radius:999px;white-space:nowrap}.topic-tabs button.active{background:var(--gold2);border-color:var(--gold2);color:#28352f}.topic-feature{display:grid;grid-template-columns:1.25fr .75fr;background:#fff;color:var(--ink);margin-top:18px}.topic-feature img{width:100%;height:370px;object-fit:cover}.topic-copy{padding:34px}.topic-copy h3{font-size:34px;line-height:1.1;margin:7px 0 12px}.topic-copy p{color:#5c6661}.rank-list{counter-reset:item;margin:24px 0;padding:0;list-style:none}.rank-list li{counter-increment:item;padding:10px 0;border-top:1px solid var(--line)}.rank-list li:before{content:counter(item,decimal-leading-zero);font:700 11px ui-monospace,monospace;color:#a2762b;margin-right:12px}.topic-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:14px}.topic-card{background:#1a3833;border:1px solid #ffffff13;padding:20px;text-decoration:none;color:#fff}.topic-card small{color:#9eb0aa}.topic-card h3{margin:8px 0;font-size:19px}.topic-card p{color:#bdcac5;font-size:14px}.official-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.official-card{background:#fff;border:1px solid var(--line);overflow:hidden}.official-thumb{height:180px;overflow:hidden;background:#e8ece8}.official-thumb img{width:100%;height:100%;object-fit:cover;transition:.3s}.official-card:hover img{transform:scale(1.03)}.official-card div:last-child{padding:17px}.official-card h3{margin:0}.official-card p{font-size:13px;color:var(--muted)}.official-card button{border:0;background:none;color:#8d651e;padding:0;font-weight:750}.plan-switcher{display:flex;gap:8px;margin-bottom:18px;overflow:auto}.plan-switcher button{border:1px solid var(--line);background:#fff;padding:10px 14px;white-space:nowrap}.plan-switcher button.active{background:var(--forest);color:#fff}.plan-detail{background:#fff;border:1px solid var(--line);padding:28px}.plan-summary{display:grid;grid-template-columns:.8fr 1.2fr;gap:40px}.plan-summary h3{font-size:34px;margin:0}.plan-days{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:22px}.plan-day{padding:12px;background:#f0f3ef;font-size:12px}.packing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.pack-card{background:#fff;border:1px solid var(--line);padding:22px}.pack-card h3{font-size:21px;margin:0 0 10px}.pack-card ul{padding-left:18px;color:#59635f}.pack-card li{margin:7px 0}footer{background:#0d211e;color:#fff;padding:34px max(24px,4vw);display:flex;justify-content:space-between;gap:30px}footer p{margin:0;color:#9fb2aa;max-width:760px}.dialog{position:fixed;inset:0;z-index:100;background:#102b27e6;display:grid;place-items:center;padding:25px}.dialog-card{background:#fff;max-width:1100px;max-height:90vh;overflow:auto;box-shadow:var(--shadow)}.dialog-card img{width:100%;display:block}.dialog-head{display:flex;justify-content:space-between;padding:18px 22px}.dialog-head button{border:0;background:#eef1ed;width:38px;height:38px;border-radius:50%}@media(max-width:1000px){.journey-heading{grid-template-columns:1fr}.journey-workspace{grid-template-columns:1fr}.map-stage{height:500px}.date-rail{grid-template-columns:repeat(4,1fr)}.day-card{grid-template-columns:90px 1fr 1fr}.day-card .risk-note{grid-column:2/4}.official-grid{grid-template-columns:repeat(2,1fr)}.topic-grid,.packing-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:680px){.site-header{height:64px;padding:0 16px}.site-header nav{display:none}.today-button{font-size:12px;padding:8px 10px}.journey-shell{padding:32px 14px 20px}.journey-heading{gap:26px}.journey-heading h1{font-size:44px}.trip-facts b{font-size:19px}.journey-workspace{display:block}.map-toolbar{padding:0 13px}.map-stage{height:48vh;min-height:340px;max-height:470px}.map-legend{left:10px;right:10px;bottom:10px;justify-content:space-between;gap:5px}.map-note{display:none}.day-panel{padding:24px 20px}.day-panel h2{font-size:27px}.date-rail{display:flex;overflow:auto}.date-chip{min-width:122px}.content-block{padding:68px 18px}.section-heading{display:block}.section-heading>p{margin-top:14px}.section-heading h2{font-size:40px}.day-card{grid-template-columns:64px 1fr}.day-card>.fact-list,.day-card>.risk-note{grid-column:2}.topic-feature{display:block}.topic-feature img{height:230px}.topic-copy{padding:24px}.topic-grid,.official-grid,.packing-grid{grid-template-columns:1fr}.plan-summary{grid-template-columns:1fr}.plan-days{grid-template-columns:repeat(2,1fr)}footer{display:block;padding:30px 18px}footer p{margin-top:10px}}
+:root{--ink:#17201e;--forest:#102b27;--paper:#f6f7f4;--white:#fff;--muted:#68716d;--line:#dce1dc;--gold:#d6a750;--gold2:#f0d59a;--river:#5e93a5;--hike:#d06b4e;--shuttle:#66845f;--shadow:0 22px 60px rgba(16,43,39,.12)}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.65 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}button,a{font:inherit}button{cursor:pointer}.site-header{height:72px;padding:0 max(24px,4vw);display:flex;align-items:center;gap:42px;position:sticky;top:0;z-index:50;background:#f6f7f4e8;backdrop-filter:blur(18px);border-bottom:1px solid #17201e17}.brand{text-decoration:none;font-weight:850}.brand span{display:block;font:700 10px/1 ui-monospace,monospace;letter-spacing:.18em;color:#64726c;margin-bottom:4px}.site-header nav{display:flex;gap:24px}.site-header nav a{text-decoration:none;color:#65706b;font-size:14px}.today-button{margin-left:auto;border:0;background:var(--forest);color:#fff;padding:10px 15px;border-radius:999px}.journey-shell{padding:64px max(24px,4vw) 30px;max-width:1640px;margin:auto}.journey-heading{display:grid;grid-template-columns:1.35fr .65fr;gap:60px;align-items:end;margin-bottom:30px}.eyebrow,.map-kicker{margin:0 0 8px;font:700 11px/1.2 ui-monospace,monospace;letter-spacing:.16em;text-transform:uppercase;color:#76807b}.journey-heading h1{margin:0;max-width:920px;font-size:clamp(42px,5.7vw,84px);line-height:1.02;letter-spacing:-.055em}.trip-facts{display:grid;grid-template-columns:repeat(2,1fr);border-top:1px solid var(--line)}.trip-facts span{padding:15px 0;border-bottom:1px solid var(--line);color:var(--muted);font-size:13px}.trip-facts b{font-size:24px;color:var(--forest);display:block}.journey-workspace{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(340px,.6fr);min-height:620px;background:#fff;border:1px solid var(--line);box-shadow:var(--shadow)}.map-card{min-width:0;display:flex;flex-direction:column}.map-toolbar{height:70px;padding:0 20px 0 24px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line)}.map-toolbar b{display:block;font-size:17px}.map-kicker{font-size:9px}.map-actions{display:flex;background:#eef1ed;padding:3px;border-radius:999px}.map-actions button{border:0;background:transparent;padding:7px 11px;border-radius:999px;color:#66706b;font-size:12px}.map-actions button.active{background:#fff;color:var(--forest);box-shadow:0 2px 10px #0001}.map-stage{height:550px;position:relative;overflow:hidden;background:linear-gradient(145deg,#e7ece7,#dfe7e4)}#routeMap{width:100%;height:100%;display:block}.map-bg{fill:#e6ebe6}.terrain-line{fill:none;stroke:#c9d5cf;stroke-width:1;opacity:.7}.route-line{fill:none;stroke-linecap:round;stroke-linejoin:round}.route-line.drive{stroke:var(--gold);stroke-width:5}.route-line.shuttle{stroke:var(--shuttle);stroke-width:5;stroke-dasharray:8 7}.route-line.hike{stroke:var(--hike);stroke-width:4;stroke-dasharray:3 7}.poi{cursor:pointer}.poi circle{stroke:#fff;stroke-width:3;filter:drop-shadow(0 4px 5px #18302933)}.poi text{font-size:12px;font-weight:750;paint-order:stroke;stroke:#eef2ee;stroke-width:4;fill:#26342f}.map-legend{position:absolute;left:18px;bottom:17px;display:flex;gap:14px;background:#102b27e8;color:#fff;padding:9px 12px;border-radius:6px;font-size:11px}.map-legend span:before{content:"";display:inline-block;width:17px;height:3px;margin-right:6px;vertical-align:middle;background:currentColor}.map-legend .drive{color:var(--gold)}.map-legend .shuttle{color:#9db394}.map-legend .hike{color:#ef8a6c}.map-legend .stay{color:#fff}.map-legend .stay:before{width:8px;height:8px;border-radius:50%}.map-note{position:absolute;right:16px;bottom:17px;background:#fffd;padding:7px 10px;border-radius:6px;color:#65706b;font-size:10px}.day-panel{padding:30px;background:var(--forest);color:#fff;display:flex;flex-direction:column}.panel-top{display:flex;justify-content:space-between}.panel-top .eyebrow{color:#9fb2aa}.panel-top button{border:0;background:transparent;color:#aebeb8;font-size:12px}.day-panel h2{font-size:30px;line-height:1.12;letter-spacing:-.035em;margin:18px 0 13px}.day-panel>p{color:#c3d0cb;margin:0 0 22px}.schedule-preview{border-top:1px solid #ffffff24}.schedule-item{display:grid;grid-template-columns:66px 1fr;gap:12px;padding:11px 0;border-bottom:1px solid #ffffff1d}.schedule-item time{color:var(--gold2);font:700 12px/1.6 ui-monospace,monospace}.schedule-item b{font-size:14px}.schedule-item small{display:block;color:#9fb2aa}.day-meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:18px}.day-meta span{font-size:11px;color:#c3d0cb;border:1px solid #ffffff25;padding:4px 7px;border-radius:99px}.primary-link{color:#fff;text-decoration:none;font-weight:750;margin-top:auto;padding-top:22px;display:flex;justify-content:space-between;border-top:1px solid #ffffff24}.date-rail{display:grid;grid-template-columns:repeat(9,1fr);gap:1px;margin-top:18px;background:var(--line);border:1px solid var(--line)}.date-chip{border:0;background:#fff;padding:14px 12px;text-align:left;min-height:86px}.date-chip small{display:block;color:#87908c}.date-chip b{display:block;margin:3px 0}.date-chip span{font-size:11px;color:#69736f;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.date-chip.active{background:var(--forest);color:#fff}.date-chip.active small,.date-chip.active span{color:#b9c8c2}.content-block{max-width:1540px;margin:auto;padding:90px max(24px,4vw)}.section-heading{display:flex;justify-content:space-between;align-items:end;gap:50px;margin-bottom:30px}.section-heading h2{font-size:clamp(34px,4.2vw,58px);line-height:1.03;letter-spacing:-.045em;margin:0}.section-heading>p{max-width:510px;color:var(--muted);margin:0}.day-feed{border-top:1px solid #cbd2cd}.day-card{display:grid;grid-template-columns:110px 1.25fr .85fr .85fr;gap:24px;padding:28px 0;border-bottom:1px solid #cbd2cd}.day-number small{display:block;color:var(--muted)}.day-number b{font-size:30px}.day-card h3{font-size:24px;margin:0 0 6px}.day-card p{margin:0;color:#5d6762}.day-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}.mini-link{border:1px solid #ccd4cf;background:#fff;text-decoration:none;color:var(--forest);padding:5px 8px;font-size:12px}.fact-list small{display:block;color:#87908c}.fact-list b{display:block;margin-bottom:10px}.risk-note{padding:13px;background:#efe5d2;color:#654d25;font-size:13px}.topics-block{max-width:none;background:var(--forest);color:#fff}.topics-block>.section-heading,.topics-block>.topic-tabs,.topics-block>.topic-feature,.topics-block>.topic-grid{max-width:1420px;margin-left:auto;margin-right:auto}.topics-block .eyebrow,.topics-block .section-heading>p{color:#aebeb8}.topic-tabs{display:flex;gap:7px;overflow:auto;padding-bottom:14px}.topic-tabs button{border:1px solid #ffffff27;background:transparent;color:#cad5d1;padding:8px 12px;border-radius:999px;white-space:nowrap}.topic-tabs button.active{background:var(--gold2);border-color:var(--gold2);color:#28352f}.topic-feature{display:grid;grid-template-columns:1.25fr .75fr;background:#fff;color:var(--ink);margin-top:18px}.topic-feature img{width:100%;height:370px;object-fit:cover}.topic-copy{padding:34px}.topic-copy h3{font-size:34px;line-height:1.1;margin:7px 0 12px}.topic-copy p{color:#5c6661}.rank-list{counter-reset:item;margin:24px 0;padding:0;list-style:none}.rank-list li{counter-increment:item;padding:10px 0;border-top:1px solid var(--line)}.rank-list li:before{content:counter(item,decimal-leading-zero);font:700 11px ui-monospace,monospace;color:#a2762b;margin-right:12px}.topic-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:14px}.topic-card{background:#1a3833;border:1px solid #ffffff13;padding:20px;text-decoration:none;color:#fff}.topic-card small{color:#9eb0aa}.topic-card h3{margin:8px 0;font-size:19px}.topic-card p{color:#bdcac5;font-size:14px}.official-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.official-card{background:#fff;border:1px solid var(--line);overflow:hidden}.official-thumb{height:180px;overflow:hidden;background:#e8ece8}.official-thumb img{width:100%;height:100%;object-fit:cover;transition:.3s}.official-card:hover img{transform:scale(1.03)}.official-card div:last-child{padding:17px}.official-card h3{margin:0}.official-card p{font-size:13px;color:var(--muted)}.official-card button{border:0;background:none;color:#8d651e;padding:0;font-weight:750}.plan-switcher{display:flex;gap:8px;margin-bottom:18px;overflow:auto}.plan-switcher button{border:1px solid var(--line);background:#fff;padding:10px 14px;white-space:nowrap}.plan-switcher button.active{background:var(--forest);color:#fff}.plan-detail{background:#fff;border:1px solid var(--line);padding:28px}.plan-summary{display:grid;grid-template-columns:.8fr 1.2fr;gap:40px}.plan-summary h3{font-size:34px;margin:0}.plan-days{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:22px}.plan-day{padding:12px;background:#f0f3ef;font-size:12px}.packing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.pack-card{background:#fff;border:1px solid var(--line);padding:22px}.pack-card h3{font-size:21px;margin:0 0 10px}.pack-card ul{padding-left:18px;color:#59635f}.pack-card li{margin:7px 0}footer{background:#0d211e;color:#fff;padding:34px max(24px,4vw);display:flex;justify-content:space-between;gap:30px}footer p{margin:0;color:#9fb2aa;max-width:760px}.dialog{position:fixed;inset:0;z-index:100;background:#102b27e6;display:grid;place-items:center;padding:25px}.dialog-card{background:#fff;max-width:1100px;max-height:90vh;overflow:auto;box-shadow:var(--shadow)}.dialog-card img{width:100%;display:block}.dialog-head{display:flex;justify-content:space-between;padding:18px 22px}.dialog-head button{border:0;background:#eef1ed;width:38px;height:38px;border-radius:50%}@media(max-width:1000px){.journey-heading{grid-template-columns:1fr}.journey-workspace{grid-template-columns:1fr}.map-stage{height:500px}.date-rail{grid-template-columns:repeat(4,1fr)}.day-card{grid-template-columns:90px 1fr 1fr}.day-card .risk-note{grid-column:2/4}.official-grid{grid-template-columns:repeat(2,1fr)}.topic-grid,.packing-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:680px){.site-header{height:64px;padding:0 16px}.site-header nav{display:none}.today-button{font-size:12px;padding:8px 10px}.journey-shell{padding:32px 14px 20px}.journey-heading{gap:26px}.journey-heading h1{font-size:44px}.trip-facts b{font-size:19px}.journey-workspace{display:block}.map-toolbar{padding:0 13px}.map-stage{height:48vh;min-height:340px;max-height:470px}.map-legend{left:10px;right:10px;bottom:10px;justify-content:space-between;gap:5px}.map-note{display:none}.day-panel{padding:24px 20px}.day-panel h2{font-size:27px}.date-rail{display:flex;overflow:auto}.date-chip{min-width:122px}.content-block{padding:68px 18px}.section-heading{display:block}.section-heading>p{margin-top:14px}.section-heading h2{font-size:40px}.day-card{grid-template-columns:64px 1fr}.day-card>.fact-list,.day-card>.risk-note{grid-column:2}.topic-feature{display:block}.topic-feature img{height:230px}.topic-copy{padding:24px}.topic-grid,.official-grid,.packing-grid{grid-template-columns:1fr}.plan-summary{grid-template-columns:1fr}.plan-days{grid-template-columns:repeat(2,1fr)}footer{display:block;padding:30px 18px}footer p{margin-top:10px}}
 
-/* ── 阶段B 新增：地图四色与示意走向、导览图查看器、话题与原话、方案差异 ── */
+/* ── 地图线型与示意走向、导览查看器、话题与原话、方案差异 ── */
 :root{--bus:#4c7d8c;--train:#6f6a86;--intent:#a9b4ad;--quote:#9a6b20;--quote2:#fbf1dd}
 .route-line.bus{stroke:var(--bus);stroke-width:4;stroke-dasharray:2 6}
 .route-line.train{stroke:var(--train);stroke-width:5;stroke-dasharray:14 6}
@@ -81,7 +81,7 @@ body[data-map="amap"] #routeMap{display:none}
 body[data-map="amap"] .map-stage{background:#e9ede9}
 
 /* 图片加载失败的占位：保持原有格子尺寸，避免整版布局跳动 */
-.img-fallback{background:#123b34;color:#8fa79f;border-radius:14px;min-height:120px;display:flex;
+.img-fallback{background:#123b34;color:#8fa79f;border-radius:8px;min-height:120px;display:flex;
   flex-direction:column;gap:6px;justify-content:center;padding:14px;text-align:center;font-size:13px}
 .img-fallback b{color:#c7d6d0;font-size:14px}
 
@@ -91,9 +91,10 @@ body[data-map="amap"] .map-stage{background:#e9ede9}
 body[data-map="leaflet"] #leafmap{display:block}
 body[data-map="leaflet"] #routeMap{display:none}
 body[data-map="leaflet"] .map-stage{background:#e9ede9}
-#leafmap .leaflet-tile-pane{filter:saturate(.5) hue-rotate(100deg) brightness(1.05) contrast(.93)}
+/* 高德瓦片自带配色，只做极轻的统一调性，不再改色相（之前 hue-rotate 把水画成了粉色） */
+#leafmap .leaflet-tile-pane{filter:saturate(.92) brightness(1.02) contrast(1.02)}
 #leafmap .leaflet-container{background:#e9ede9;font:inherit}
-#leafmap .leaflet-control-zoom{border:1px solid var(--line);box-shadow:0 4px 14px #17352d18;border-radius:9px;overflow:hidden}
+#leafmap .leaflet-control-zoom{border:1px solid var(--line);box-shadow:0 4px 14px #17352d18;border-radius:8px;overflow:hidden}
 #leafmap .leaflet-control-zoom a{width:34px;height:34px;line-height:34px;color:#20443c;background:#fffffff2;border-bottom:1px solid var(--line)}
 #leafmap .leaflet-control-zoom a:last-child{border-bottom:0}
 .pin-sight .pin,.pin-road .pin,.pin-stay .pin,.pin-hub .pin{width:26px;height:26px;display:flex;align-items:center;
@@ -101,13 +102,13 @@ body[data-map="leaflet"] .map-stage{background:#e9ede9}
 .pin-sight .pin{background:#d6a750;border-radius:50%}
 .pin-road .pin{background:#c8964a;border-radius:50%}
 .pin-hub .pin{background:#4c7d8c;border-radius:50%}
-.pin-stay .pin{background:#102b27;border-radius:7px}
+.pin-stay .pin{background:#102b27;border-radius:6px}
 .leaflet-tooltip.tip-name{border:0;border-radius:6px;box-shadow:0 3px 12px #0003;font-weight:700;font-size:12px;padding:4px 8px;background:#fff;color:#22332e}
 .leaflet-tooltip.tip-name:before{display:none}
 .leaflet-tooltip.tip-line{background:#17352df2;color:#fff;border:0;border-radius:6px;font-size:11px;padding:4px 8px;box-shadow:0 3px 12px #0003}
 .leaflet-tooltip.tip-line:before{display:none}
 .map-drawer{position:absolute;z-index:740;left:16px;top:16px;bottom:16px;width:352px;display:none;overflow:auto;
-  background:#fffffff8;backdrop-filter:blur(14px);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
+  background:#fffffff8;backdrop-filter:blur(14px);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow)}
 .map-drawer.open{display:block}
 .drawer-x{position:sticky;float:right;top:12px;right:12px;margin:12px 12px -46px 0;width:34px;height:34px;border-radius:50%;
   border:1px solid var(--line);background:#fffffff2;font-size:19px;line-height:1;z-index:3}
@@ -118,8 +119,8 @@ body[data-map="leaflet"] .map-stage{background:#e9ede9}
 .drawer-in p{margin:0;font-size:15px;line-height:1.75;color:#3f4f4a}
 .drawer-meta{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}
 .drawer-meta span{font-size:12px;background:#eef2ee;color:#4a5b57;border-radius:99px;padding:4px 9px}
-.drawer-guide{display:block;width:100%;text-align:left;border:1px dashed #cbb384;background:#fbf6ea;color:#8a6a20
-  border-radius:9px;padding:10px 12px;font-size:13px;margin-bottom:8px}
+.drawer-guide{display:block;width:100%;text-align:left;border:1px dashed #cbb384;background:#fbf6ea;color:#8a6a20;
+  border-radius:8px;padding:10px 12px;font-size:13px;margin-bottom:8px}
 .drawer-go{display:block;font-size:14px;font-weight:750;color:var(--forest);text-decoration:none;padding:8px 0}
 .drawer-days{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;border-top:1px solid var(--line);padding-top:12px}
 .drawer-days a{font-size:12px;border:1px solid var(--line);border-radius:99px;padding:5px 10px;text-decoration:none;color:#4a5b57}
@@ -143,7 +144,7 @@ body[data-map="leaflet"] .map-stage{background:#e9ede9}
 .drawer-src{margin:10px 0 0;font-size:12px;color:#8a948f}
 
 /* ════════════════════════════════════════════════════════════════════
-   视觉系统 v2（2026-09-14 Bailian）：编辑型户外产品，参考顶级 AI 产品站的信息层级
+   视觉系统：编辑型户外产品，克制的信息层级
    —— 暖纸底、发丝线、大留白、克制的深墨绿与秋叶金；地图用真实地理而非装饰纹样
    ════════════════════════════════════════════════════════════════════ */
 :root{
@@ -151,7 +152,7 @@ body[data-map="leaflet"] .map-stage{background:#e9ede9}
   --line:rgba(24,29,26,.10); --line-soft:rgba(24,29,26,.06);
   --pine:#123B33; --pine-2:#1C5247; --gold:#B9822F; --teal:#2E7F6E; --amber:#B0742C;
   --map-bg:#F3F2EC; --water:#CBDFDA; --water-edge:#B7D2CB;
-  --r-s:10px; --r-m:16px; --r-l:22px;
+  --r-s:10px; --r-m:10px; --r-l:10px;
   --shadow-1:0 1px 2px rgba(18,29,25,.05), 0 6px 20px rgba(18,29,25,.06);
   --shadow-2:0 2px 6px rgba(18,29,25,.06), 0 18px 44px rgba(18,29,25,.10);
 }
@@ -342,7 +343,7 @@ body[data-map="amap"] #routeMap{ display:none; }
   padding:7px 10px; color:var(--muted); font-size:11px; line-height:1.55; }
 @media (max-width:680px){ .map-note{ display:none; } .map-legend{ font-size:10.5px; gap:8px 12px; } }
 
-/* ══ 质感 v3（2026-09-14）：克制、精确、留白——参考 Linear/Vercel/Stripe 的信息气质 ══ */
+/* ══ 质感：克制、精确、留白 ═ */
 body{ background:#FBFAF8; }
 body::before{ content:""; position:fixed; inset:0 0 auto 0; height:520px; pointer-events:none;
   background:radial-gradient(1200px 420px at 18% -80px, rgba(18,59,51,.055), transparent 70%); }
@@ -361,26 +362,26 @@ body::before{ content:""; position:fixed; inset:0 0 auto 0; height:520px; pointe
   padding:12px 22px; font-size:14.5px; font-weight:550; background:rgba(255,255,255,.6);
   transition:border-color .18s, color .18s; }
 .btn-line:hover{ border-color:var(--pine); color:var(--pine); }
-.journey-workspace{ border-radius:18px; border:1px solid rgba(24,29,26,.09);
+.journey-workspace{ border-radius:8px; border:1px solid rgba(24,29,26,.09);
   box-shadow:0 1px 2px rgba(18,29,25,.04), 0 24px 60px rgba(18,29,25,.07); overflow:hidden; }
 .map-stage{ height:560px; }
 .map-legend{ font-size:12px; gap:10px 18px; padding:10px 18px; }
 .map-note:empty{ display:none; }
-.day-card{ border-radius:14px; }
+.day-card{ border-radius:8px; }
 .day-number b,.day-date{ font-size:20px; font-weight:640; }
 .content-block h2,.section-heading h2,.plan-compare h2{ font-weight:640; letter-spacing:-.025em; }
-.topic-band,.topics-dark{ border-radius:20px; }
-.topic-card{ border-radius:14px; }
-.official-card{ border-radius:14px; }
+.topic-band,.topics-dark{ border-radius:8px; }
+.topic-card{ border-radius:8px; }
+.official-card{ border-radius:8px; }
 .official-thumb{ height:160px; }
-.pack-card{ border-radius:14px; }
-.plan-detail{ border-radius:16px; }
+.pack-card{ border-radius:8px; }
+.plan-detail{ border-radius:8px; }
 td{ font-size:14.5px; }
 th{ font:600 12px/1.5 -apple-system,"PingFang SC",sans-serif; letter-spacing:.06em; text-transform:none; }
 footer{ background:#0E211C; }
 @media (max-width:680px){ .journey-shell{ padding-top:40px; } .hero-cta a{ padding:11px 18px; } }
 
-/* ══ v4 首页信息架构与质感收口（2026-09-14 晚）══
+/* ══ 首页信息架构与质感 ═
    圆角统一收小：卡片 8、模块 10、按钮保留胶囊；标题改为"中文小标 + 大标题 + 一句说明" */
 :root{ --r-s:6px; --r-m:8px; --r-l:10px; }
 .journey-workspace,.map-module,.day-card,.topic-card,.official-card,.pc-card,.plan-detail,
@@ -418,7 +419,7 @@ footer{ background:#0E211C; }
 .scope-switch button{ border:1px solid var(--line); background:#fff; border-radius:999px;
   padding:6px 13px; font-size:12.5px; color:#5C6661; }
 .scope-switch button.active{ border-color:var(--pine); color:var(--pine); }
-.map-stage{ height:520px; }
+.map-stage{ height:min(68vh,660px); }
 .map-foot{ display:flex; align-items:center; gap:14px; padding:10px 14px;
   border-top:1px solid var(--line-soft); flex-wrap:wrap; }
 .date-rail{ display:flex; gap:6px; overflow-x:auto; padding:2px; }
@@ -456,7 +457,7 @@ footer{ background:#0E211C; }
   text-decoration:none; color:inherit; }
 .day-card h3{ font-size:17px; font-weight:640; letter-spacing:-.015em; margin:0 0 6px; }
 .day-card p{ color:#5C6661; font-size:14px; line-height:1.7; margin:0 0 10px; }
-.mini-tag{ display:inline-block; background:#F4F3EC; border-radius:5px; padding:3px 8px;
+.mini-tag{ display:inline-block; background:#F4F3EC; border-radius:6px; padding:3px 8px;
   font-size:12px; color:#5C6661; margin:0 6px 4px 0; }
 .risk-note{ grid-column:1/-1; background:#FBF7EE; border:1px solid rgba(185,130,47,.20);
   border-radius:var(--r-s); padding:9px 12px; font-size:12.5px; color:#6B4E1D; line-height:1.6; }
@@ -510,13 +511,13 @@ footer{ background:#0E211C; }
 .quote{ border-radius:var(--r-s); }
 .shot{ border-radius:var(--r-s); }
 
-/* v4.1 修正：日期条/日程条不吃全局胶囊圆角，不被拉伸 */
+/* 日期条／日程条不吃全局胶囊圆角，不被拉伸 */
 .map-foot{ align-items:center; }
 .date-rail{ align-items:center; }
 .date-rail .date-chip{ border-radius:999px; height:auto; align-self:center; padding:7px 14px; }
 .strip-card{ border-radius:0; }
 .strip-card:first-child{ border-radius:0; }
-/* v4.2：日期胶囊强制单行高度（覆盖任何继承来的行高/拉伸） */
+/* 日期胶囊强制单行高度 */
 .map-foot .date-rail .date-chip{ height:34px; display:inline-flex; align-items:center;
   justify-content:center; line-height:1; flex:0 0 auto; }
 .day-strip .strip-card{ line-height:1.5; }
@@ -537,7 +538,7 @@ footer{ background:#0E211C; }
 .dd-red{ color:#8A4A1D; }
 @media (max-width:860px){ .dd-grid{ grid-template-columns:1fr; } }
 
-/* ══ v5：首屏费用/事项模块 + 逐日卡重排 + 路线抽屉文案 ══ */
+/* ══ 首屏费用／事项模块 ＋ 逐日卡 ＋ 路线抽屉 ══ */
 .first-modules{ display:grid; grid-template-columns:1.15fr .85fr; gap:14px; margin:14px 0 0; }
 .fm{ background:#fff; border:1px solid rgba(24,29,26,.09); border-radius:10px; padding:18px 20px 16px; }
 .fm header{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:12px; }
@@ -604,7 +605,7 @@ footer{ background:#0E211C; }
 .gm-pin.ghost-pin .gm-pin-core{ fill:#8A948D; }
 .gm-name.ghost{ color:#8A948D; font-size:11.5px; margin-left:6px; white-space:nowrap; }
 
-/* ══ v6：首屏三横模块（与地图同宽）+ 逐日卡重排 + 间距收紧 ══ */
+/* ══ 首屏三横模块（与地图同宽）+ 逐日卡重排 + 间距收紧 ══ */
 .first-modules{ display:grid; grid-template-columns:1fr; gap:12px; margin:12px 0 0; }
 .fm{ padding:16px 18px 14px; }
 .fm header{ margin-bottom:10px; }
@@ -634,7 +635,7 @@ footer{ background:#0E211C; }
 .hero{ padding-top:clamp(36px,5vw,64px); }
 .map-hint,#mapCollapse{ display:none !important; }
 
-/* ══ v7：依据直列 / 侧栏改横条 / 官方导览卡 / 每日花费表 ══ */
+/* ═ 依据直列／侧栏横条／官方导览卡／每日花费表 ═ */
 .basis{ font-size:12.5px; color:#6B7570; line-height:1.65; margin:6px 0 0; padding:8px 10px;
   background:#FAF9F5; border-left:2px solid var(--line); border-radius:0 6px 6px 0; }
 #facts{ position:static !important; background:#F4F3EC !important; color:var(--ink) !important;
@@ -661,7 +662,7 @@ footer{ background:#0E211C; }
 .dc-note{ font-size:12px; color:#8A948D; margin:8px 0 0; }
 #dayCost table{ width:100%; }
 
-/* ══ v8：首屏方案按钮 / 表格化模块 / 攻略卡 / 导览缩略图 / 手机适配 ══ */
+/* ══ 首屏方案按钮／表格化模块／攻略卡／导览缩略图／手机适配 ══ */
 .hero-cta{ display:flex; gap:10px; margin-top:22px; }
 .hero-cta button{ border:1px solid var(--line); background:#fff; border-radius:999px;
   padding:11px 22px; font-size:14.5px; font-weight:600; color:var(--ink-2); }
@@ -729,12 +730,12 @@ footer{ display:none !important; }
   .offp-grid{ grid-template-columns:1fr; }
   table.cmp td, table.days-tbl td{ font-size:12px; padding:8px 9px; }
   .hero h1{ font-size:34px; }
-  .map-stage{ height:48vh; min-height:320px; }
+  .map-stage{ height:auto; aspect-ratio:1.25; min-height:250px; }
   .day-strip{ grid-template-columns:repeat(3,1fr); }
 }
 @media (max-width:560px){ .guide-grid{ grid-template-columns:1fr; } .off-thumbs{ grid-template-columns:1fr 1fr; } }
 
-/* ══ v9：范围按钮浮在地图内 ══ */
+/* ══ 范围按钮浮在地图内 ══ */
 .map-overlay{ position:absolute; top:10px; left:12px; right:12px; display:flex;
   justify-content:space-between; align-items:center; z-index:600; pointer-events:none; }
 .map-overlay .scope-switch{ pointer-events:auto; background:rgba(255,255,255,.94);
@@ -762,7 +763,7 @@ footer{ display:none !important; }
 .map-module{ margin-top:0; border-top:0; }
 @media (max-width:760px){ .hero-cta{ justify-content:flex-start; } }
 
-/* ══ v10：删右下角标注；图例补线型与点型示例 ══ */
+/* ══ 删右下角标注；图例补线型与点型示例 ══ */
 #mapNote{ display:none !important; }
 .map-legend button i{ width:20px; height:0; border-top:3px solid #B0742C; border-radius:2px; }
 .map-legend .lg-drive i{ border-color:#B0742C; }
@@ -772,7 +773,7 @@ footer{ display:none !important; }
 .map-legend .lg-stay i{ width:10px; height:10px; border:0; border-radius:50%; background:#123B33; }
 .map-legend .lg-camp i{ width:10px; height:10px; border:0; border-radius:50%; background:#2E7F6E; }
 
-/* ══ v11：攻略卡图片+标题；官方导览分栏；方案页比例 ══ */
+/* ══ 攻略卡图片＋标题；官方导览分栏；方案页比例 ═ */
 .guide-card{ padding:0; overflow:hidden; display:flex; flex-direction:column; }
 .guide-card img{ width:100%; height:150px; object-fit:cover; display:block; }
 .gc-ph{ width:100%; height:150px; display:grid; place-items:center; background:#E8E6DE;
@@ -798,7 +799,7 @@ footer{ display:none !important; }
 .plan-days{ grid-template-columns:repeat(7,1fr) !important; }
 .diff-list li{ font-size:13px; }
 
-/* ══ v12（2026-09-14 Bailian）：空间利用与设计语言统一 ══
+/* ══ 空间利用与设计语言统一 ═══
    目标：首屏两栏（左标题 / 右方案方块）、地图零留白、逐日与费用卡表化、
    卡片/按钮/表格/标签/引用共用一套发丝线+小圆角语言。 */
 
@@ -858,53 +859,6 @@ footer{ display:none !important; }
 .cmp-note{ font-size:12.5px; color:#8A938E; margin:10px 0 0; line-height:1.7; }
 .cmp-key{ width:26%; }
 
-/* 5. 逐日：九天九张卡，不再是错位大表 */
-.day-tiles{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
-.day-tile{ display:flex; flex-direction:column; gap:8px; background:#fff; text-decoration:none;
-  border:1px solid rgba(24,29,26,.09); border-radius:10px; padding:14px 16px 12px; color:var(--ink);
-  transition:border-color .18s, box-shadow .18s, transform .18s; }
-.day-tile:hover{ border-color:rgba(18,59,51,.28); box-shadow:0 10px 26px rgba(18,29,25,.07);
-  transform:translateY(-1px); }
-.day-tile header{ display:flex; align-items:baseline; gap:8px; }
-.day-tile header b{ font-size:15px; font-weight:660; font-variant-numeric:tabular-nums; }
-.day-tile header span{ font-size:12px; color:#98A19C; }
-.dt-head{ margin:0; font-size:13.5px; line-height:1.65; color:var(--ink-2);
-  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
-.dt-figs{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
-.dt-figs div{ background:#FAF9F5; border:1px solid var(--line-soft); border-radius:8px; padding:7px 9px; }
-.dt-figs i{ display:block; font-style:normal; font-size:11px; color:#98A19C; }
-.dt-figs span{ font-size:12px; color:var(--ink-2); }
-.dt-tags{ display:flex; flex-wrap:wrap; gap:6px; }
-.dt-tags span{ font-size:11.5px; color:#5C6661; background:#F4F3EC; border-radius:999px; padding:3px 9px; }
-.day-tile footer{ display:flex; align-items:baseline; gap:10px; margin-top:auto; padding-top:8px;
-  border-top:1px solid var(--line-soft); }
-.dt-cut{ flex:1; min-width:0; font-size:11.5px; color:#98A19C;
-  display:-webkit-box; -webkit-line-clamp:1; -webkit-box-orient:vertical; overflow:hidden; }
-.day-tile footer em{ font-style:normal; font-size:12.5px; font-weight:600; color:var(--pine); }
-@media (max-width:1000px){ .day-tiles{ grid-template-columns:1fr 1fr; } }
-@media (max-width:620px){ .day-tiles{ grid-template-columns:1fr; } }
-
-/* 6. 费用：六个关键数字 + 与日程同日的按天表 */
-.money-grid{ display:grid; grid-template-columns:repeat(6,1fr); gap:1px; background:var(--line-soft);
-  border:1px solid rgba(24,29,26,.09); border-radius:10px; overflow:hidden; }
-.money-cell{ background:#fff; padding:14px 16px; }
-.money-cell i{ display:block; font-style:normal; font-size:11.5px; color:#98A19C; letter-spacing:.02em; }
-.money-cell b{ display:block; font-size:20px; font-weight:650; letter-spacing:-.02em; margin:4px 0 3px;
-  font-variant-numeric:tabular-nums; color:var(--ink); }
-.money-cell span{ font-size:12px; color:#78807B; line-height:1.5; }
-.md-head{ display:flex; align-items:baseline; gap:12px; margin:18px 0 8px; }
-.md-head b{ font-size:15px; font-weight:640; }
-.md-head span{ font-size:12.5px; color:#98A19C; }
-.md-head .btn-line{ margin-left:auto; }
-.cost-tbl th.num, .cost-tbl td.num, .cost-tbl td.dc-num{ text-align:right;
-  font-variant-numeric:tabular-nums; }
-.dc-w{ display:block; font-size:11px; color:#98A19C; margin-top:2px; }
-.cost-tbl td b{ font-weight:640; }
-.dc-quote{ font-style:normal; font-size:12px; color:#8A6A2F; background:#FBF6EC;
-  border:1px solid rgba(185,130,47,.22); border-radius:999px; padding:2px 9px; }
-@media (max-width:1000px){ .money-grid{ grid-template-columns:repeat(3,1fr); } }
-@media (max-width:560px){ .money-grid{ grid-template-columns:1fr 1fr; } }
-
 /* 7. 出发前事项：五行横条，行末箭头 */
 .fm-list{ list-style:none; margin:0; padding:0; background:#fff; border:1px solid rgba(24,29,26,.09);
   border-radius:10px; overflow:hidden; }
@@ -944,15 +898,36 @@ footer{ display:none !important; }
 /* 10. 手机：首屏竖排，方案方块横向可滑 */
 @media (max-width:860px){
   .hero{ grid-template-columns:1fr; align-items:start; gap:20px; }
-  .hero-cta{ justify-content:flex-start; overflow-x:auto; padding-bottom:4px; }
+  .hero-cta{ justify-content:flex-start; overflow-x:auto; flex-wrap:nowrap; padding-bottom:4px;
+    -webkit-overflow-scrolling:touch; scrollbar-width:none; }
   #planBtns button{ width:108px; min-height:104px; flex:0 0 auto; }
   .lg-plans{ padding-right:10px; }
 }
 
-/* v12.1：地图模块与正文同宽同轴，且在窄屏不外扩 */
+/* 地图模块与正文同宽同轴，窄屏不外扩 */
 .map-module{ width:calc(100% - 2 * max(24px, 4vw)); }
 @media (max-width:680px){ .map-module{ width:calc(100% - 32px); } }
 .offp-col li{ position:relative; padding-left:20px; }
 .offp-col li:before{ content:""; position:absolute; left:8px; top:14px; width:6px; height:1.5px;
   background:var(--teal,#2E7F6E); border-radius:2px; }
-.offp-col li b,.offp-col li span{ display:none; }
+
+
+/* ── 费用：按天花费条，点一天跳到当天明细 ─────────────────────────── */
+.spend-rail{ margin-top:18px; }
+.spend-cap{ margin:0 0 10px; font-size:12px; color:var(--faint,#8A938E); }
+.spend-strip{ display:grid; grid-template-columns:repeat(9,1fr); gap:1px;
+  background:var(--line-soft,rgba(24,29,26,.06)); border:1px solid var(--line,rgba(24,29,26,.10));
+  border-radius:var(--r-m,10px); overflow:hidden; }
+.sp-day{ background:#fff; border:0; padding:12px 12px 11px; text-align:left; cursor:pointer;
+  display:flex; flex-direction:column; gap:4px; font-family:inherit; transition:background .16s; }
+.sp-day:hover{ background:#FAF8F2; }
+.sp-day i{ font-style:normal; font-size:11.5px; color:var(--faint,#8A938E); font-variant-numeric:tabular-nums; }
+.sp-day b{ font-size:16px; font-weight:640; color:var(--ink,#181D1A); letter-spacing:-.02em;
+  font-variant-numeric:tabular-nums; line-height:1.2; }
+.sp-day b em{ font-style:normal; font-size:11px; font-weight:500; color:var(--faint,#8A938E); margin-left:2px; }
+.sp-day span{ font-size:11px; color:#78807B; line-height:1.45;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.sp-day.has-quote span{ color:#8A6A2F; }
+@media (max-width:1000px){ .spend-strip{ grid-template-columns:repeat(5,1fr); } }
+@media (max-width:620px){ .spend-strip{ grid-template-columns:repeat(3,1fr); } }
+.dtable tbody tr.flash{ background:#FBF6EC; }

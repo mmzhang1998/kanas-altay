@@ -9,8 +9,9 @@
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%rect width='64' height='64' rx='15' fill='%23102b27'/%3E<path d='M7 48 25 16l8 14 8-11 16 29z' fill='%23e5bd70'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="vendor/leaflet.css">
 <link rel="stylesheet" href="app.css">
+<link rel="stylesheet" href="theme.css">
 </head>
-<body>
+<body data-map="loading">
 <main id="top">
   <section class="hero">
     <div class="hero-copy">
@@ -42,44 +43,43 @@
   </section>
 
   <section class="block" id="plans">
-    <header class="block-head"><p class="kicker">方案对比</p><h2>三条路线，差异只在七处</h2>
-      <p class="block-sub">高亮的是地图上正在走的方案。<a class="btn-line small" href="plans.html">打开完整对比 →</a></p></header>
+    <header class="block-head"><p class="kicker">方案</p><h2>三条路线，一张地图</h2>
+      <p class="block-sub">差异集中在 9/25—9/29。点上方方案切换，地图与下面的日程一起变。<a class="btn-line small" href="plans.html">打开完整对比 →</a></p></header>
     <div id="planTable"></div>
   </section>
 
   <section class="block" id="moneysec">
-    <header class="block-head"><p class="kicker">费用</p><h2>钱花在哪，一天一天对得上</h2>
-      <p class="block-sub">住、吃、交通、门票按天拆开，待报价项单独标出。<a class="btn-line small" href="budget.html">费用计算器 →</a></p></header>
+    <header class="block-head"><p class="kicker">费用</p><h2>钱花在哪，花在哪天</h2>
+      <p class="block-sub">先看关键数字，再点任意一天，跳到当天明细。四段包车待司机报价，先按区间估。</p></header>
     <div id="moneyList"></div>
   </section>
 
   <section class="block" id="todosec">
-    <header class="block-head"><p class="kicker">出发前事项</p><h2>这五件先办，其余十件有清单</h2>
-      <p class="block-sub">按截止时间排序，办完一件划掉一件。<a class="btn-line small" href="tasks.html">全部 15 项 →</a></p></header>
+    <header class="block-head"><p class="kicker">行前</p><h2>出门前要办的事</h2>
+      <p class="block-sub">按截止时间排序，办完一件划掉一件。<a class="btn-line small" href="tasks.html">看全部事项 →</a></p></header>
     <ol class="fm-list" id="todoList"></ol>
   </section>
 
   <section class="block" id="days">
-    <header class="block-head"><p class="kicker">逐日</p><h2>九天，一天一张卡</h2>
-      <p class="block-sub">点卡片进当日完整日程，点地图内的线路看这一段的路况。</p></header>
+    <header class="block-head"><p class="kicker">日程</p><h2>九天，一天一行</h2>
+      <p class="block-sub">日程、移动、过夜与当天花销在同一条线上；点任意一行进当日完整日程。</p></header>
     <div id="dayFeed"></div>
   </section>
 
   <section class="block" id="topics">
-    <header class="block-head"><p class="kicker">攻略</p><h2>十一个现场问题，直接给答案</h2>
-      <p class="block-sub">先给结论，再给这一步该做什么。</p></header>
+    <header class="block-head"><p class="kicker">攻略</p><h2>到了现场，先看这些</h2>
+      <p class="block-sub">先给结论，再给这一步该怎么做。</p></header>
     <div class="guide-grid" id="guideGrid"></div>
   </section>
 
   <section class="block" id="official">
-    <header class="block-head"><p class="kicker">官方导览图</p><h2>四张图，单击看要点，双击看全图</h2>
-      <p class="block-sub">官方原文已提炼成要点，只留现场要用的那几句。</p></header>
+    <header class="block-head"><p class="kicker">导览</p><h2>导览图与要点</h2>
+      <p class="block-sub">单击切换要点，双击打开大图。</p></header>
     <div class="off-thumbs" id="offThumbs"></div>
     <div class="off-panel" id="offPanel"></div>
   </section>
 </main>
 <script>window._AMapSecurityConfig={securityJsCode:"8b874c815a4c3ef85971b90eb9fe4343"};</script>
-<script defer src="https://webapi.amap.com/maps?v=2.0&key=b579fc947bc5de2d4fe8ef587fd7fbac&plugin=AMap.Driving,AMap.ToolBar"></script>
 <script defer src="vendor/leaflet.js"></script>
 <script defer src="data/roads.js"></script>
 <script defer src="geomap.js"></script>
@@ -89,6 +89,20 @@
 <script defer src="data/map-config.js"></script>
 <script defer src="map.js"></script>
 <script defer src="amap.js"></script>
+<script>
+/* 高德 JS API 需要在高德控制台登记的域名下才能鉴权，本机预览（file:// 与 localhost）
+   必然失败；这种情况直接走离线真实路网与公开瓦片，不加载高德脚本，避免首屏白等。
+   部署到已登记域名时再异步加载，就绪后自动升级为高德底图。 */
+(function(){
+  var host=location.hostname||"";
+  var isLocal=location.protocol==="file:"||/^(localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\])$/.test(host);
+  if(isLocal) return;
+  var s=document.createElement("script");s.async=true;
+  s.src="https://webapi.amap.com/maps?v=2.0&key=b579fc947bc5de2d4fe8ef587fd7fbac&plugin=AMap.Driving,AMap.ToolBar";
+  s.onload=function(){window.dispatchEvent(new Event("amap-ready"));};
+  document.head.appendChild(s);
+})();
+</script>
 <script defer src="app.js"></script>
 </body>
 </html>
