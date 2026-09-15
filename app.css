@@ -87,18 +87,19 @@ body[data-map="amap"] .map-stage{background:#e9ede9}
 
 /* ── 真地图层：Leaflet + 灰底瓦片调色 + 图钉 + 抽屉（app.js 的 SVG 只在瓦片不可达时出现） ── */
 .map-stage{height:720px}
-#leafmap{position:absolute;inset:0;z-index:2;display:none;background:#e9ede9}
+#leafmap{position:absolute;inset:0;z-index:2;display:none;background:#EDEFEA}
 body[data-map="leaflet"] #leafmap{display:block}
 body[data-map="leaflet"] #routeMap{display:none}
-body[data-map="leaflet"] .map-stage{background:#e9ede9}
-/* 高德瓦片自带配色，只做极轻的统一调性，不再改色相（之前 hue-rotate 把水画成了粉色） */
-#leafmap .leaflet-tile-pane{filter:saturate(.92) brightness(1.02) contrast(1.02)}
-#leafmap .leaflet-container{background:#e9ede9;font:inherit}
+body[data-map="leaflet"] .map-stage{background:#EDEFEA}
+/* 底图是给路线当背景的，不是主角：压掉瓦片自带的彩色饱和度与重线条，
+   让行程线浮在图上面。色相不动（之前 hue-rotate 把水画成了粉色）。 */
+#leafmap .leaflet-tile-pane{filter:saturate(.82) brightness(1.04) contrast(1.01)}
+#leafmap .leaflet-container{background:#EDEFEA;font:inherit}
 #leafmap .leaflet-control-zoom{border:1px solid var(--line);box-shadow:0 4px 14px #17352d18;border-radius:8px;overflow:hidden}
 #leafmap .leaflet-control-zoom a{width:34px;height:34px;line-height:34px;color:#20443c;background:#fffffff2;border-bottom:1px solid var(--line)}
 #leafmap .leaflet-control-zoom a:last-child{border-bottom:0}
-.pin-sight .pin,.pin-road .pin,.pin-stay .pin,.pin-hub .pin{width:26px;height:26px;display:flex;align-items:center;
-  justify-content:center;border:3px solid #fff;box-shadow:0 4px 12px #17352d55;color:#fff;font-size:12px;font-weight:750}
+.pin-sight .pin,.pin-road .pin,.pin-stay .pin,.pin-hub .pin{width:22px;height:22px;display:flex;align-items:center;
+  justify-content:center;border:2px solid #fff;box-shadow:0 2px 7px #17352d3d;color:#fff;font-size:11px;font-weight:750}
 .pin-sight .pin{background:#d6a750;border-radius:50%}
 .pin-road .pin{background:#c8964a;border-radius:50%}
 .pin-hub .pin{background:#4c7d8c;border-radius:50%}
@@ -202,10 +203,10 @@ a{ color:inherit; }
 .gm-bg{ fill:var(--map-bg); }
 .gm-water{ fill:var(--water); stroke:var(--water-edge); stroke-width:.7; }
 .gm-water-leaf{ fill:var(--water); stroke:var(--water-edge); stroke-width:1; }
-.gm-ctx-casing{ fill:none; stroke:#E6E3D9; stroke-width:3.1; stroke-linecap:round; }
-.gm-ctx{ fill:none; stroke:#FFFFFF; stroke-width:1.9; stroke-linecap:round; }
-.gm-casing{ fill:none; stroke:#FFFFFF; stroke-width:6.4; stroke-linecap:round; stroke-linejoin:round; opacity:.95; }
-.gm-casing.ghost{ stroke-width:3.4; opacity:.7; }
+.gm-ctx-casing{ fill:none; stroke:#E6E3D9; stroke-width:2.6; stroke-linecap:round; }
+.gm-ctx{ fill:none; stroke:#FFFFFF; stroke-width:1.6; stroke-linecap:round; }
+.gm-casing{ fill:none; stroke:#FFFFFF; stroke-width:5.2; stroke-linecap:round; stroke-linejoin:round; opacity:.95; }
+.gm-casing.ghost{ stroke-width:2.8; opacity:.7; }
 .gm-line{ fill:none; stroke-linecap:round; stroke-linejoin:round; }
 .gm-line.ghost{ opacity:.34; }
 .gm-line.stub{ stroke-dasharray:2 6 !important; }
@@ -221,9 +222,9 @@ a{ color:inherit; }
 .gm-label{ font-size:11.5px; font-weight:600; fill:#20302A; }
 /* Leaflet 侧同款标记 */
 .gpin-wrap{ background:none; border:none; }
-.gpin{ display:block; width:22px; height:22px; border-radius:50%; background:#fff;
-  box-shadow:0 1px 4px rgba(18,29,25,.28); position:relative; }
-.gpin b{ position:absolute; inset:6px; border-radius:50%; background:var(--gold); }
+.gpin{ display:block; width:18px; height:18px; border-radius:50%; background:#fff;
+  box-shadow:0 1px 3px rgba(18,29,25,.2); position:relative; }
+.gpin b{ position:absolute; inset:5px; border-radius:50%; background:var(--gold); }
 .gpin.road b{ background:var(--amber); } .gpin.hub b{ background:var(--teal); }
 .gpin.stay{ background:var(--pine); } .gpin.stay b{ background:#fff; }
 .leaflet-tooltip.tip-name{ background:transparent; border:none; box-shadow:none; color:#20302A;
@@ -329,7 +330,7 @@ section h2,.section h2{ font-size:clamp(24px,2.6vw,34px); font-weight:680; lette
 .amap-text.tip-name{ background:transparent; border:none; box-shadow:none; color:#20302A;
   font:600 11.5px/1.4 -apple-system,"PingFang SC",sans-serif; padding:0;
   text-shadow:0 0 3px #FBFAF7,0 0 3px #FBFAF7,0 0 6px #FBFAF7; }
-#leafmap .gpin{ box-shadow:0 1px 4px rgba(18,29,25,.3); }
+#leafmap .gpin{ box-shadow:0 1px 3px rgba(18,29,25,.22); }
 
 /* 高德引擎：容器必须显示（此前只对 leaflet 打开） */
 body[data-map="amap"] #leafmap{ display:block; }
@@ -536,6 +537,13 @@ footer{ background:#0E211C; }
 .dd-side{ display:flex; flex-direction:column; gap:7px; font-size:12.5px; color:#5C6661; }
 .dd-side i{ font-style:normal; color:#98A19C; margin-right:8px; }
 .dd-red{ color:#8A4A1D; }
+.dd-plan{ display:flex; flex-direction:column; gap:7px; padding:10px 0 6px; }
+.dd-plan-tag{ align-self:flex-start; font-size:11.5px; font-weight:600; letter-spacing:.02em; color:#fff;
+  background:var(--pc,#123B33); border-radius:5px; padding:3px 8px; }
+.dd-plan p{ margin:0; font-size:12.5px; line-height:1.7; color:#5C6661; }
+.dd-plan a{ color:var(--pine); font-weight:600; text-decoration:none; }
+.day-detail .dd-plan{ padding:6px 0 4px; }
+.day-detail .dd-plan p{ font-size:12px; }
 @media (max-width:860px){ .dd-grid{ grid-template-columns:1fr; } }
 
 /* ══ 首屏费用／事项模块 ＋ 逐日卡 ＋ 路线抽屉 ══ */

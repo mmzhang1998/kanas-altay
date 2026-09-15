@@ -249,23 +249,26 @@ body[data-type="budget"] .wrap-tbl .src,body[data-type="tasks"] .tk-src{display:
 .guide-inline{display:block;margin:4px 0 0;background:var(--white);border:1px solid var(--line);
   border-radius:var(--r-l);padding:16px}
 .guide-inline+.guide-inline{margin-top:12px}
+/* 图框先按导览图固有比例占位：图片懒加载完成前后高度一致，
+   不会出现「按钮高度 0、点不到」与版面跳动。 */
 .guide-fig{display:block;width:100%;padding:0;border:0;background:var(--tint);cursor:zoom-in;
-  border-radius:var(--r-m);overflow:hidden}
-.guide-fig img{display:block;width:100%;height:auto;max-height:340px;object-fit:contain;
-  background:var(--tint)}
+  border-radius:var(--r-m);overflow:hidden;aspect-ratio:1280/1045}
+.guide-fig img{display:block;width:100%;height:100%;object-fit:contain;background:var(--tint)}
 .guide-text{padding:16px 2px 2px}
 .guide-inline.folded{grid-template-columns:minmax(0,1fr)}
 .guide-inline.folded .guide-text{display:none}
-.offp-key{margin:0 0 16px;padding-left:12px;border-left:2px solid var(--gold);
-  font-size:var(--fs-body);line-height:1.72;color:var(--ink)}
-.offp-cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin:0 0 14px}
+/* 与 theme.css 首页「官方导览」面板同一套度量，避免两处观感分叉 */
+.offp-key{margin:0 0 20px;padding-left:12px;border-left:2px solid var(--gold);
+  font-size:var(--fs-body);line-height:1.72;color:var(--ink-2)}
+.offp-cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px;margin:0 0 16px}
 .offp-col{min-width:0}
-.offp-h{margin:0 0 8px;font-size:var(--fs-xs);font-weight:600;letter-spacing:.08em;color:var(--faint)}
+.offp-h{font:600 11.5px/1.5 -apple-system,BlinkMacSystemFont,"PingFang SC","Noto Sans SC",sans-serif;
+  letter-spacing:.1em;color:var(--faint);margin:0 0 10px}
 .offp-col ul{list-style:none;margin:0;padding:0}
-.offp-col li{position:relative;margin:0 0 6px;padding:9px 10px 9px 26px;background:var(--tint);
+.offp-col li{position:relative;margin:0 0 6px;padding:9px 12px 9px 26px;background:var(--tint);
   border-radius:var(--r-s);font-size:var(--fs-sm);line-height:1.62;color:var(--ink-2)}
-.offp-col li:before{content:"";position:absolute;left:11px;top:16px;width:7px;height:1.5px;
-  background:var(--teal);border-radius:var(--r-xs)}
+.offp-col li:before{content:"";position:absolute;left:12px;top:17px;width:7px;height:1.5px;
+  background:var(--teal);border-radius:2px}
 .guide-fig:focus-visible,.plan-btn:focus-visible,.seg button:focus-visible,
 .xrow input:focus-visible,.off-thumb:focus-visible{outline:2px solid var(--forest);outline-offset:2px}
 
@@ -402,6 +405,8 @@ body[data-type="budget"] .wrap-tbl .src,body[data-type="tasks"] .tk-src{display:
 .total-bar b{display:block;font-size:var(--fs-h2);color:var(--gold-2);font-variant-numeric:tabular-nums}
 .total-bar .caveat b{color:#fff;font-size:var(--fs-body)}
 .total-bar .caveat span{display:block;margin-top:6px;font-size:var(--fs-sm);color:var(--gold-2)}
+.est-line{margin:10px 0 0;font-size:var(--fs-sm);color:var(--muted);line-height:1.7}
+.est-line b{color:var(--ink);font-variant-numeric:tabular-nums;font-weight:700}
 .scen-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
 .scen-grid article{background:var(--white);border:1px solid var(--line);border-radius:var(--r-m);padding:18px}
 .scen-grid article.now{border-color:var(--forest);background:var(--tint)}
@@ -498,55 +503,10 @@ table.core-tbl tr.diff td.lead-cell{color:var(--gold-ink)}
 table.core-tbl tr.diff td:not(.lead-cell){font-weight:650;color:var(--forest)}
 
 /* ══ 响应式 ══════════════════════════════════════════════════ */
-@media(max-width:1080px){
-  .detail-section>table{display:block;overflow-x:auto;white-space:nowrap}
-}
-@media(max-width:860px){
-  .detail-hero{grid-template-columns:minmax(0,1fr)}
-  .leg-grid,.pgrid,.food-grid,.callout-grid,.link-grid,.plan-switch,
-  .night-grid,.opt-grid,.money-grid,.scen-grid,.offp-cols{grid-template-columns:minmax(0,1fr)}
-  .shot-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .detail-hero h1{font-size:clamp(26px,7vw,34px)}
-  .fact-strip{padding:12px 14px 10px}
-  .fact-strip .fs-item{flex:1 1 100%}
-  .wrap-tbl.money table{min-width:0}
-  .wrap-tbl.money th:nth-child(3),.wrap-tbl.money td:nth-child(3){width:auto}
-  .plan-split{grid-template-columns:minmax(0,1fr);gap:28px}
-  .plan-left{position:static}
-  .plan-split .plan-btn{grid-template-columns:minmax(0,1fr);gap:4px}
-}
+
+
 /* 手机端：单列、正文不再向下缩（已 ≥13.5px），表格横向滚动 */
-@media(max-width:680px){
-  .detail-main{width:min(100% - 24px,1180px);padding:26px 0 60px}
-  .detail-header{padding:12px 14px;gap:10px}
-  .detail-header .brand{margin:0 0 0 auto;font-size:var(--fs-sm)}
-  .detail-nav{display:none}
-  .detail-section{padding:24px 0}
-  .detail-hero{gap:20px;padding-bottom:24px}
-  .num-row,.num-row.wide{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .shot-grid,.shot-grid.ev{grid-template-columns:minmax(0,1fr)}
-  .wrap-tbl table{min-width:560px}
-  #dayCost{overflow-x:auto}
-  #dayCost table{min-width:520px}
-  .timeline li{grid-template-columns:64px minmax(0,1fr);gap:10px}
-  .pcard img,.pcard-noimg{width:96px;flex:0 0 96px;min-height:88px}
-  .pcard{min-height:88px}
-  .plan-cmp article{padding:16px}
-  .plan-nights .plan-day{flex-wrap:wrap}
-  .plan-nights .plan-day small{flex-basis:100%;margin-left:0}
-  .xrow{grid-template-columns:minmax(0,1fr)}
-  .xrow input{width:100%}
-  .mini-link,.text-link{height:40px;padding:0 16px}
-  .fact-strip .fs-item a{display:inline-flex;align-items:center;min-height:40px;min-width:32px;justify-content:center}
-  .trace svg{max-height:240px}
-  .guide-fig img{max-height:260px}
-  body[data-type="budget"] .money-grid,
-  body[data-type="budget"] .scen-grid,
-  body[data-type="budget"] .opt-grid,
-  body[data-type="budget"] .night-grid,
-  body[data-type="budget"] .total-bar{grid-template-columns:minmax(0,1fr)}
-  .task-list li{grid-template-columns:24px minmax(0,1fr);gap:10px}
-}
+
 
 /* 逐晚开关与升级项的行内出处说明对读者无意义，只留金额与标签 */
 body[data-type="budget"] .ncell>small,
@@ -616,58 +576,15 @@ body[data-type="budget"] .opt small{display:none}
 .empty-state .empty-back{margin-top:18px}
 
 /* ── 响应式 ─────────────────────────────────────────────────── */
-@media(max-width:1080px){
-  #content.has-rail{grid-template-columns:minmax(0,1fr)}
-  .detail-rail{grid-column:1;grid-row:1;position:static}
-  .detail-flow{grid-row:2}
-  /* 目录在小屏变成一条横向速查，不再占一屏 */
-  .rail-nav{display:none}
-  .detail-rail .fact-strip{grid-template-columns:repeat(2,minmax(0,1fr));
-    column-gap:24px;padding:12px 16px 10px}
-}
-@media(max-width:860px){
-  .detail-flow .callout-grid,
-  .detail-flow .leg-grid,
-  .detail-flow .pgrid,
-  .detail-flow .food-grid,
-  .detail-flow .fac-wrap{grid-template-columns:minmax(0,1fr)}
-  .detail-flow>.detail-section>.detail-list,
-  .detail-flow>.detail-section>.verify-list{columns:1}
-  .detail-flow>.detail-section>.shot-grid:has(> :nth-child(4)){grid-template-columns:repeat(2,minmax(0,1fr))}
-  .quote-grid{grid-template-columns:minmax(0,1fr)}
-  .detail-rail .fact-strip{grid-template-columns:minmax(0,1fr)}
-}
-@media(max-width:680px){
-  .detail-section{padding:18px 0}
-  .empty-state .empty-grid{grid-template-columns:minmax(0,1fr)}
-}
+
+
+
 
 /* ══════════════════════════════════════════════════════════════
    费用页窄屏：表格改卡片式，竖着读，不再横向滚动。
    ledger.js 只产出 .wrap-tbl / #dayCost，这里用 CSS 换排法。
    ══════════════════════════════════════════════════════════════ */
-@media(max-width:680px){
-  body[data-type="budget"] #dayCost{overflow:visible}
-  body[data-type="budget"] #dayCost table{min-width:0}
-  body[data-type="budget"] .wrap-tbl{border:0;border-radius:0;background:transparent;
-    overflow:visible;padding:0}
-  body[data-type="budget"] .wrap-tbl table{min-width:0}
-  body[data-type="budget"] .wrap-tbl table,
-  body[data-type="budget"] .wrap-tbl thead,
-  body[data-type="budget"] .wrap-tbl tbody,
-  body[data-type="budget"] .wrap-tbl tr,
-  body[data-type="budget"] .wrap-tbl td{display:block;width:100%;min-width:0}
-  body[data-type="budget"] .wrap-tbl thead{display:none}
-  body[data-type="budget"] .wrap-tbl tr{background:var(--white);border:1px solid var(--line);
-    border-radius:var(--r-m);padding:11px 13px;margin-bottom:10px}
-  body[data-type="budget"] .wrap-tbl tbody tr:last-child{margin-bottom:0}
-  body[data-type="budget"] .wrap-tbl td{border-bottom:0;padding:4px 0;text-align:left !important;
-    white-space:normal;line-height:1.62}
-  body[data-type="budget"] .wrap-tbl td:first-child{font-size:var(--fs-body);font-weight:650;
-    color:var(--ink);padding-bottom:7px;margin-bottom:7px;border-bottom:1px solid var(--line-soft)}
-  body[data-type="budget"] .wrap-tbl td:empty{display:none}
-  body[data-type="budget"] .wrap-tbl .src{margin-top:2px}
-}
+
 
 /* ══════════════════════════════════════════════════════════════
    密度：同样的信息用更少的竖向空间（字阶与颜色不动）
@@ -691,15 +608,8 @@ body[data-type="budget"] .opt small{display:none}
 .detail-flow>.detail-section>.shot-grid:has(> :nth-child(6)){grid-template-columns:repeat(6,minmax(0,1fr))}
 .detail-flow .shot figcaption{padding:7px 8px 8px}
 
-@media(max-width:860px){
-  .detail-flow>.detail-section>.shot-grid:has(> :nth-child(4)),
-  .detail-flow>.detail-section>.shot-grid:has(> :nth-child(6)){grid-template-columns:repeat(2,minmax(0,1fr))}
-}
-@media(max-width:680px){
-  .detail-section{padding:16px 0}
-  .detail-flow>.detail-section>.shot-grid:has(> :nth-child(4)),
-  .detail-flow>.detail-section>.shot-grid:has(> :nth-child(6)){grid-template-columns:minmax(0,1fr)}
-}
+
+
 
 /* ══════════════════════════════════════════════════════════════
    收尾：右栏不超出视口；空页不留顶部空白；
@@ -708,11 +618,98 @@ body[data-type="budget"] .opt small{display:none}
 .detail-rail{max-height:calc(100vh - 96px);overflow:auto;overscroll-behavior:contain}
 #hero:empty{display:none}
 
+/* ══ 响应式：断点集中收口（1080 / 860 / 680） ══════════════ */
 @media(max-width:1080px){
+  .detail-section>table{display:block;overflow-x:auto;white-space:nowrap}
+  #content.has-rail{grid-template-columns:minmax(0,1fr)}
+  .detail-rail{grid-column:1;grid-row:1;position:static}
+  .detail-flow{grid-row:2}
+  /* 目录在小屏变成一条横向速查，不再占一屏 */
+  .rail-nav{display:none}
+  .detail-rail .fact-strip{grid-template-columns:repeat(2,minmax(0,1fr));
+    column-gap:24px;padding:12px 16px 10px}
   .detail-rail{max-height:none;overflow:visible}
 }
-
+@media(max-width:860px){
+  .detail-hero{grid-template-columns:minmax(0,1fr)}
+  .leg-grid,.pgrid,.food-grid,.callout-grid,.link-grid,.plan-switch,
+  .night-grid,.opt-grid,.money-grid,.scen-grid,.offp-cols{grid-template-columns:minmax(0,1fr)}
+  .shot-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .detail-hero h1{font-size:clamp(26px,7vw,34px)}
+  .fact-strip{padding:12px 14px 10px}
+  .fact-strip .fs-item{flex:1 1 100%}
+  .wrap-tbl.money table{min-width:0}
+  .wrap-tbl.money th:nth-child(3),.wrap-tbl.money td:nth-child(3){width:auto}
+  .plan-split{grid-template-columns:minmax(0,1fr);gap:28px}
+  .plan-left{position:static}
+  .plan-split .plan-btn{grid-template-columns:minmax(0,1fr);gap:4px}
+  .detail-flow .callout-grid,
+  .detail-flow .leg-grid,
+  .detail-flow .pgrid,
+  .detail-flow .food-grid,
+  .detail-flow .fac-wrap{grid-template-columns:minmax(0,1fr)}
+  .detail-flow>.detail-section>.detail-list,
+  .detail-flow>.detail-section>.verify-list{columns:1}
+  .detail-flow>.detail-section>.shot-grid:has(> :nth-child(4)){grid-template-columns:repeat(2,minmax(0,1fr))}
+  .quote-grid{grid-template-columns:minmax(0,1fr)}
+  .detail-rail .fact-strip{grid-template-columns:minmax(0,1fr)}
+  .detail-flow>.detail-section>.shot-grid:has(> :nth-child(4)),
+  .detail-flow>.detail-section>.shot-grid:has(> :nth-child(6)){grid-template-columns:repeat(2,minmax(0,1fr))}
+}
 @media(max-width:680px){
+  .detail-main{width:min(100% - 24px,1180px);padding:26px 0 60px}
+  .detail-header{padding:12px 14px;gap:10px}
+  .detail-header .brand{margin:0 0 0 auto;font-size:var(--fs-sm)}
+  .detail-nav{display:none}
+  .detail-section{padding:24px 0}
+  .detail-hero{gap:20px;padding-bottom:24px}
+  .num-row,.num-row.wide{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .shot-grid,.shot-grid.ev{grid-template-columns:minmax(0,1fr)}
+  .wrap-tbl table{min-width:560px}
+  #dayCost{overflow-x:auto}
+  #dayCost table{min-width:520px}
+  .timeline li{grid-template-columns:64px minmax(0,1fr);gap:10px}
+  .pcard img,.pcard-noimg{width:96px;flex:0 0 96px;min-height:88px}
+  .pcard{min-height:88px}
+  .plan-cmp article{padding:16px}
+  .plan-nights .plan-day{flex-wrap:wrap}
+  .plan-nights .plan-day small{flex-basis:100%;margin-left:0}
+  .xrow{grid-template-columns:minmax(0,1fr)}
+  .xrow input{width:100%}
+  .mini-link,.text-link{height:40px;padding:0 16px}
+  .fact-strip .fs-item a{display:inline-flex;align-items:center;min-height:40px;min-width:32px;justify-content:center}
+  .trace svg{max-height:240px}
+  body[data-type="budget"] .money-grid,
+  body[data-type="budget"] .scen-grid,
+  body[data-type="budget"] .opt-grid,
+  body[data-type="budget"] .night-grid,
+  body[data-type="budget"] .total-bar{grid-template-columns:minmax(0,1fr)}
+  .task-list li{grid-template-columns:24px minmax(0,1fr);gap:10px}
+  .detail-section{padding:18px 0}
+  .empty-state .empty-grid{grid-template-columns:minmax(0,1fr)}
+  body[data-type="budget"] #dayCost{overflow:visible}
+  body[data-type="budget"] #dayCost table{min-width:0}
+  body[data-type="budget"] .wrap-tbl{border:0;border-radius:0;background:transparent;
+    overflow:visible;padding:0}
+  body[data-type="budget"] .wrap-tbl table{min-width:0}
+  body[data-type="budget"] .wrap-tbl table,
+  body[data-type="budget"] .wrap-tbl thead,
+  body[data-type="budget"] .wrap-tbl tbody,
+  body[data-type="budget"] .wrap-tbl tr,
+  body[data-type="budget"] .wrap-tbl td{display:block;width:100%;min-width:0}
+  body[data-type="budget"] .wrap-tbl thead{display:none}
+  body[data-type="budget"] .wrap-tbl tr{background:var(--white);border:1px solid var(--line);
+    border-radius:var(--r-m);padding:11px 13px;margin-bottom:10px}
+  body[data-type="budget"] .wrap-tbl tbody tr:last-child{margin-bottom:0}
+  body[data-type="budget"] .wrap-tbl td{border-bottom:0;padding:4px 0;text-align:left !important;
+    white-space:normal;line-height:1.62}
+  body[data-type="budget"] .wrap-tbl td:first-child{font-size:var(--fs-body);font-weight:650;
+    color:var(--ink);padding-bottom:7px;margin-bottom:7px;border-bottom:1px solid var(--line-soft)}
+  body[data-type="budget"] .wrap-tbl td:empty{display:none}
+  body[data-type="budget"] .wrap-tbl .src{margin-top:2px}
+  .detail-section{padding:16px 0}
+  .detail-flow>.detail-section>.shot-grid:has(> :nth-child(4)),
+  .detail-flow>.detail-section>.shot-grid:has(> :nth-child(6)){grid-template-columns:minmax(0,1fr)}
   body[data-type="budget"] .wrap-tbl td:before{color:var(--faint);font-size:var(--fs-xs);
     letter-spacing:.02em}
   body[data-type="budget"] .wrap-tbl td:first-child:before{content:none}

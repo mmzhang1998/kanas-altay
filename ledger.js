@@ -46,15 +46,18 @@
         + [['票与区间车', money(calc.tickets_three), '三人合计'],
           ['住宿', money(t.stay), t.camps + ' 晚露营'],
           ['露营装备', money(t.gear), t.camps ? '有露营夜才租' : '全部住店则不租'],
-          ['餐饮', money(t.food), '按 ' + calc.food_per_person[state.food] + ' 元/人'],
+          ['餐饮', money(t.food), '按 ' + calc.food_per_person[state.food] + ' 元/人 · 8 天'],
           ['白哈巴→喀纳斯', money(t.transfer ? t.transfer.three : 0), t.transfer ? t.transfer.label : ''],
-          ['四段整车（已填 ' + (4 - t.missing) + '/4）', money(t.xSum), t.missing ? '仍有 ' + t.missing + ' 段未报价' : '全部填入']]
+          ['四段整车（已填 ' + (4 - t.missing) + '/4）', money(t.xSum), t.missing ? '仍有 ' + t.missing + ' 段未报价' : '全部填入'],
+          ['整车预估区间', '¥ 1,800—3,600', '600—1200 元/人；填入真实报价即替换']]
         .map(x => '<div class="mcell"><small>' + x[0] + '</small><b>' + x[1] + '</b><span>' + esc(x[2] || '') + '</span></div>').join('')
         + '</div>'
         + '<div class="total-bar"><div><small>三人地面合计</small><b>' + money(t.ground) + '</b></div>'
         + '<div><small>每人地面合计</small><b>' + money(t.ground / 3) + '</b></div>'
         + '<div class="caveat"><small>还不含</small><b>往返火车按 12306 实付</b>'
-        + '<span>' + (t.missing ? '另有 ' + t.missing + ' 段整车未报价，不能当 0 元' : '四段整车已填齐') + '</span></div></div>';
+        + '<span>' + (t.missing ? '另有 ' + t.missing + ' 段整车未报价，不能当 0 元' : '四段整车已填齐') + '</span></div></div>'
+        + '<p class="est-line">预估人均消费：<b>' + money(Math.round((t.ground + 1800) / 3)) + '—'
+        + money(Math.round((t.ground + 3600) / 3)) + '</b>（本页合计 ＋ 四段整车预估 1800—3600 元/车；不含往返火车）</p>';
       const sc = b.scenarios_v4.filter(s => s.recomputed)[0];
       $('#scenNow').innerHTML = '<p class="big">本页当前组合：<b>' + money(t.ground) + '</b> 三人 · '
         + money(t.ground / 3) + ' 每人（不含火车）。主方案估算 ' + esc(sc.three_total) + '／人 '
@@ -83,7 +86,7 @@
         '<label class="opt"><input type="radio" name="transfer" value="' + t.id + '"' + (state.transfer === t.id ? ' checked' : '') + '>'
         + '<span>' + esc(t.label) + ' <em>' + (t.three ? money(t.three) + '／三人' : '含票内') + '</em>'
         + '<small>' + esc(t.source) + '</small></span></label>').join('') + '</div>'
-      + '<div><b>餐饮目标（每人）</b>' + calc.food_per_person.map((f, i) =>
+      + '<div><b>餐饮预估（每人）</b>' + calc.food_per_person.map((f, i) =>
         '<label class="opt"><input type="radio" name="food" value="' + i + '"' + (state.food == i ? ' checked' : '') + '>'
         + '<span>' + money(f) + ' <small>' + esc(calc.food_source) + '</small></span></label>').join('') + '</div></div>', '可变');
 
@@ -210,12 +213,12 @@
         : (/区间车|摆渡|村公交/.test(move) ? '含票内' : '含票内');
       const ticket = /白哈巴/.test(d.headline || '') ? '30 元/人' : (/禾木/.test(d.headline || '') ? '50 元/人'
         : (/喀纳斯/.test(d.headline || '') ? '230 元/人含区间车' : '0'));
-      return '<tr><td><b>' + d.date + '</b></td><td>' + esc(stayTxt) + '</td><td>50—60 元/人</td><td>'
+      return '<tr><td><b>' + d.date + '</b></td><td>' + esc(stayTxt) + '</td><td>100 元/人</td><td>'
         + esc(traffic) + '</td><td>' + esc(ticket) + '</td></tr>';
     }).join('');
     host.innerHTML = '<div class="wrap-tbl days-tbl"><table><thead><tr><th>日期</th><th>住（预估）</th><th>吃</th><th>交通</th><th>门票</th></tr></thead>'
       + '<tbody>' + rows + '</tbody></table></div>'
-      + '<p class="dc-note">住按"整间≤600 否则帐篷"预估；标"待报价"的四段拿到司机报价后在上方填入即自动重算。</p>';
+      + '<p class="dc-note">吃按 100 元/人·天；住按"整间≤600 否则帐篷"预估；标"待报价"的四段拿到司机报价后在上方填入即自动重算。</p>';
   })();
   dropEmptySections();
 })();

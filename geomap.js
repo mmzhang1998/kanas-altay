@@ -5,9 +5,9 @@
 window.GeoMap = (function () {
   const R = window.ROADS || { water: [], ctx: [], legs: [] };
   const STYLE = {
-    drive:   { color: '#b0742c', width: 3.6, dash: null,  label: '包车／拼车（导航道路）' },
-    shuttle: { color: '#2e7f6e', width: 3.0, dash: null,  label: '景区区间车／摆渡（导航道路）' },
-    hike:    { color: '#4f8f5b', width: 3.0, dash: '0.1 7', label: '徒步路线' },
+    drive:   { color: '#b0742c', width: 3.0, dash: null,  label: '包车／拼车（导航道路）' },
+    shuttle: { color: '#2e7f6e', width: 2.6, dash: null,  label: '景区区间车／摆渡（导航道路）' },
+    hike:    { color: '#4f8f5b', width: 2.5, dash: '0.1 7', label: '徒步路线' },
     stub:    { color: '#9aa79f', width: 1.6, dash: '2 6', label: '接驳示意（无公开路网）' },
     schem:   { color: '#8a948d', width: 2.4, dash: '7 8', label: '走向示意（该路未收录于公开路网）' },
     ctx:     { color: '#ffffff', width: 2.0, dash: null },
@@ -84,7 +84,7 @@ window.GeoMap = (function () {
     legs.forEach(l => {
       if (!l.points.length) return;
       let st2 = l.src === 'schematic' ? STYLE.schem
-        : (v.colorByPlan ? { color: PLAN_COLOR[l.plan] || STYLE.drive.color, width: 3.2, dash: null } : STYLE[l.mode]);
+        : (v.colorByPlan ? { color: PLAN_COLOR[l.plan] || STYLE.drive.color, width: 2.8, dash: null } : STYLE[l.mode]);
       if (l.mode && !st2.mode) st2 = Object.assign({}, st2, { mode: l.mode });
       line(l.points, st2, 'leg-' + (l.src === 'schematic' ? 'schem' : l.mode),
            l.name + (l.src === 'schematic' ? ' · 走向示意' : (l.km ? ' · ' + l.km + ' km' : '')), l);

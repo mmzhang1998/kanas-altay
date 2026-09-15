@@ -12,7 +12,7 @@
     if (b.height > 40) H = Math.round(b.height);
     M = Math.max(18, Math.round(Math.min(W, H) * 0.07));
   }
-  let sel = 'all', scope = 'full', plan = 'main', focus = null;
+  let sel = 'all', scope = 'full', plan = window.PLAN_VIEW || 'main', focus = null;
 
   const P = TRIP.places, D = TRIP.days, T = TRIP.topics, R = TRIP.routes, G = TRIP.guides;
   /* 有 Leaflet 与底图瓦片就用真地图；失败则本文件的真实坐标 SVG 顶上（两套都不产生新事实） */
@@ -52,7 +52,8 @@
     if (scope === 'core') tracks = tracks.filter(t => !/阿禾/.test(t.name));
     if (focus) tracks = tracks.filter(t => t.id === focus);
     /* 「核心区」＝禾木—贾登峪—白哈巴—喀纳斯这一块；阿禾与阿勒泰只在「含阿禾」里出现 */
-    let v_pois = (day ? day.places.map(placeById).filter(Boolean) : withCoord)
+    const dayIds = (day && pl && pl.day_places && pl.day_places[day.id]) ? pl.day_places[day.id] : null;
+    let v_pois = (day ? (dayIds && dayIds.length ? dayIds : day.places).map(placeById).filter(Boolean) : withCoord)
       .filter(p => p.coord && p.coord[0] != null);
     if (scope === 'core' && !day) v_pois = v_pois.filter(p => !AHE_CORRIDOR[p.id]);
     /* 转场走向：只在没有真实轨迹可画的相邻点之间出现，并且明确标成示意 */
@@ -81,18 +82,19 @@
     };
     tracks = tracks.filter(t => trackOk(t, planView === 'all' ? ['main', 'alt_a', 'alt_b'] : [planView]));
     let planLegs = null, planPois = null;
-    if (!day && !focus) {
+    if (!focus) {
       const ids = planView === 'all' ? ['main', 'alt_a', 'alt_b'] : [planView];
-      planLegs = [];
-      ids.forEach(id => { planLegs = planLegs.concat(GeoMap.planLegs(id, scope)); });
+      /* 实录由 tracks 那一路负责，这里只取道路几何；同一天切方案，线也会跟着换 */
+      planLegs = GeoMap.planLegsRaw(ids, scope, day ? day.id : null).filter(l => l.src !== 'kml');
       const seen = {}; planPois = [];
-      ids.forEach(id => {
+      if (!day) ids.forEach(id => {
         const pp = TRIP.plans.filter(x => x.id === id)[0];
         (pp && pp.day_places ? Object.keys(pp.day_places).sort().reduce((acc, k) => acc.concat(pp.day_places[k]), []) : [])
           .forEach(pid => { const p = placeById(pid);
             if (p && p.coord && p.coord[0] != null && !seen[pid]
                 && (scope === 'full' || !AHE_CORRIDOR[pid])) { seen[pid] = 1; planPois.push(p); } });
       });
+      if (day) planPois = null;
     }
     return { day: day, plan: pl, tracks: tracks, pois: v_pois, intent: focus ? [] : intent,
              planLegs: planLegs, planPois: planPois, planView: planView };
@@ -253,29 +255,73 @@
     fk.style.display = list.length ? '' : 'none';
   }
 
-  /* ── 日期面板 ─────────────────────────────────────────────────────── */
+  /* ─ 日期面板 ────────────────────────────────────────────────────── */
   function selectDay(id) {
     sel = id; focus = null;
     const e0 = ENG(); if (e0) e0.select(id);
-    const d = id === 'all' ? null : Trip.day(id);
     $$('.strip-card').forEach(x => x.classList.toggle('active', x.dataset.day === id));
-    const dd = $('#dayDetail');
-    if (dd) {
-      if (!d) { dd.hidden = true; dd.innerHTML = ''; }
-      else {
-        dd.hidden = false;
-        dd.innerHTML = '<div class="dd-head"><b>' + d.date + ' ' + esc(d.week) + ' · ' + esc(d.headline) + '</b>'
-          + '<a href="day.html?id=' + d.id + '">打开当日完整日程 →</a></div>'
-          + '<div class="dd-grid"><div class="schedule-preview">'
-          + (d.timeline || []).slice(0, 6).map(x => '<div class="schedule-item"><time>' + esc(x.time || '—')
-            + '</time><div><b>' + esc(x.what || '') + '</b></div></div>').join('')
-          + '</div><div class="dd-side"><span><i>移动</i>' + esc(d.move) + '</span>'
-          + '<span><i>过夜</i>' + esc(d.sleep.split('（')[0]) + '</span>'
-          + '<span><i>大包</i>' + esc(d.bag || '—') + '</span>'
-          + '<span class="dd-red"><i>红线</i>' + esc(d.redline) + '</span></div></div>';
-      }
-    }
+    syncDayDetail();
     drawMap();
+  }
+
+  /* 当前方案（顶部三个方按钮写的就是它）＋这一天的方案内写法。
+     日期筛选必须跟着方案变，否则读者会拿主方案的日程去读备选方案。 */
+  function planOf() {
+    const cur = window.PLAN_VIEW || plan || 'main';
+    return TRIP.plans.filter(x => x.id === cur)[0] || TRIP.plans[0];
+  }
+  function planRow(pl, id) {
+    const rows = pl.day_rows || [];
+    for (let i = 0; i < rows.length; i++) if (rows[i].date === id) return rows[i];
+    return null;
+  }
+  /* 日期条上的方案写法：去掉"（第 2 晚）"这类只属于详情页的尾注，
+     超长的在自然断点收口；完整句子仍留在下方那一天的日程面板里。 */
+  function briefLabel(t) {
+    const s = String(t || '').replace(/（第\s*[0-9一二三四五六七八九十]+\s*晚）/g, '')
+                            .replace(/\(第\s*[0-9一二三四五六七八九十]+\s*晚\)/g, '').trim();
+    if (s.length <= 20) return s;
+    const cut = s.split(/[，,；;]/)[0].trim();
+    if (cut.length >= 8 && cut.length <= 18) return cut;
+    const noParen = s.replace(/（[^）]*）/g, '').trim();
+    if (noParen.length >= 8 && noParen.length <= 22) return noParen;
+    const head = s.split('（')[0].trim();
+    const base = head.length >= 8 ? head : s;
+    return base.length > 21 ? base.slice(0, 20) + '…' : base;
+  }
+  function planLabel(pl, d, brief) {
+    const r = planRow(pl, d.id);
+    let t;
+    if (pl.id !== 'main' && r && r.plan && !/^同主方案$/.test(r.plan)) t = r.plan;
+    else t = d.short;
+    return brief ? briefLabel(t) : t;
+  }
+
+  function syncDayDetail() {
+    const dd = $('#dayDetail');
+    if (!dd) return;
+    const d = sel === 'all' ? null : Trip.day(sel);
+    if (!d) { dd.hidden = true; dd.innerHTML = ''; return; }
+    const pl = planOf();
+    const label = planLabel(pl, d);
+    const differs = pl.id !== 'main' && label !== d.short;
+    const sleep = (pl.nights || {})[d.id] || d.sleep.split('（')[0];
+    dd.hidden = false;
+    dd.innerHTML = '<div class="dd-head"><b>' + d.date + ' ' + esc(d.week) + ' · ' + esc(d.headline) + '</b>'
+      + '<a href="day.html?id=' + d.id + '">打开当日完整日程 →</a></div>'
+      + '<div class="dd-grid">'
+      + '<div class="schedule-preview">'
+      + (differs
+        ? '<div class="dd-plan"><span class="dd-plan-tag" style="--pc:' + GeoMap.PLAN_COLOR[pl.id] + '">'
+            + esc(String(pl.name).split('｜')[0]) + '</span>'
+            + '<b>' + esc(label) + '</b>'
+            + '<p>该日在另一套方案里的时间轴不同，<a href="plans.html">看这一套的完整对比 →</a></p></div>'
+        : (d.timeline || []).slice(0, 6).map(x => '<div class="schedule-item"><time>' + esc(x.time || '—')
+            + '</time><div><b>' + esc(x.what || '') + '</b></div></div>').join(''))
+      + '</div><div class="dd-side"><span><i>移动</i>' + esc(d.move) + '</span>'
+      + '<span><i>过夜</i>' + esc(sleep) + '</span>'
+      + '<span><i>大包</i>' + esc(d.bag || '—') + '</span>'
+      + '<span class="dd-red"><i>红线</i>' + esc(d.redline) + '</span></div></div>';
   }
 
   /* ── 首页各区块 ───────────────────────────────────────────────────── */
@@ -288,13 +334,19 @@
     return (place || raw) + ' · 房≤600 否则帐篷';
   }
 
-  /* 地图下方的九天日程条：点一下，地图切到当天 */
+  /* 地图下方的九天日程条：跟着当前方案换标题与过夜点，点一下地图切到当天 */
   function strip() {
     const box = $('#dayStrip');
     if (!box) return;
-    box.innerHTML = D.map(d => '<button class="strip-card" data-day="' + d.id + '">'
-      + '<i>' + d.date + '</i><b>' + esc(d.short) + '</b>'
-      + '<span>' + esc((TRIP.plans[0].nights || {})[d.id] || d.sleep.split('（')[0]) + '</span></button>').join('');
+    const pl = planOf();
+    const active = sel;
+    box.innerHTML = D.map(d => {
+      const label = planLabel(pl, d, true);
+      const sleep = (pl.nights || {})[d.id] || d.sleep.split('（')[0];
+      return '<button class="strip-card' + (active === d.id ? ' active' : '') + '" data-day="' + d.id + '">'
+        + '<i>' + d.date + '</i><b>' + esc(label) + '</b>'
+        + '<span>' + esc(sleep) + '</span></button>';
+    }).join('');
     $$('.strip-card').forEach(b => b.addEventListener('click', () => {
       selectDay(b.dataset.day === sel ? 'all' : b.dataset.day);
     }));
@@ -311,7 +363,10 @@
       + '<span class="gc-go">看攻略 →</span></a>').join('');
   }
 
-  window.addEventListener('planview', () => { planPicker(); planTable(); drawMap(); });
+  window.addEventListener('planview', () => {
+    plan = window.PLAN_VIEW || plan;
+    planPicker(); planTable(); strip(); syncDayDetail(); drawMap();
+  });
 
   /* ── 三套方案：标题右侧的白色方形按钮 ───────────────────────────────── */
   function planPicker() {
@@ -386,7 +441,7 @@
         + '<td class="c-move">' + esc(d.move || '—') + '</td>'
         + '<td class="c-stay">' + esc(bedPlace(d)) + '</td>'
         + '<td class="c-num">' + esc(bedCost(d)) + '</td>'
-        + '<td class="c-num free">50—60</td>'
+        + '<td class="c-num free">100</td>'
         + '<td class="c-num">' + (quote ? '<em class="q-chip">待报价</em>'
             : '<span class="free">含票内</span>') + '</td>'
         + '<td class="c-num">' + (tk ? tk : '<span class="free">0</span>') + '</td>'
@@ -397,7 +452,7 @@
       + '<th class="c-num">住</th><th class="c-num">吃</th><th class="c-num">交通</th>'
       + '<th class="c-num">门票</th><th></th></tr></thead><tbody>' + rows + '</tbody></table>'
       + '<p class="dtable-note">住、吃、门票均为元/人：住按整间或帐篷兜底预估，露营记 0；'
-      + '吃 50—60 元/人·天；门票合计 345 元/人（喀纳斯一进 230＋跨 48 小时补差 35＋白哈巴 30＋禾木 50）。'
+      + '吃 100 元/人·天；门票合计 345 元/人（喀纳斯一进 230＋跨 48 小时补差 35＋白哈巴 30＋禾木 50）。'
       + '「待报价」是四段整车包车，拿到司机报价后到费用页重算。</p></div>';
     host.querySelectorAll('tr[data-day]').forEach(tr => tr.addEventListener('click',
       () => { location.href = 'day.html?id=' + tr.dataset.day; }));
@@ -410,18 +465,19 @@
     const B = TRIP.budget || {};
     const fixed = (B.fixed || []).reduce((n, x) => n + (parseInt(String(x.per_person)) || 0), 0);
     const unknown = (B.unknown || []).length;
+    const EST = B.estimate || {};
     const cells = [
       ['已确认票车', fixed + ' 元/人', '三人共 ' + fixed * 3 + ' 元'],
-      ['待报价整车', unknown ? '4 段' : '—', '阿禾／契巴罗依／铁贾／10·1 返程'],
+      ['整车预估', EST.charter_per_person || '600—1200 元/人', '四段整车' + (unknown ? '待司机报价' : '') + '，出价后重算'],
       ['装备租赁', '955 元/三人', '目标 ≤1000，阿勒泰租优先'],
       ['住宿上限', '≤600 元/间', '超了就用帐篷兜底'],
-      ['餐饮', '500—600 元/人', '长徒步日路餐在阿勒泰补齐'],
-      ['地面总目标', '≤3000 元/人', '往返火车实付另计'],
+      ['餐饮', EST.food_per_person || '800—1000 元/人', '按 100 元/人·天 × 8 天备'],
+      ['预估人均', '约 ' + (EST.per_person || '2800—3400 元'), (EST.parts || '吃＋票＋住＋装备＋整车分摊') + '；火车实付另计'],
     ];
     const strip = D.map(d => {
       const bed = bedPlace(d);
       const ticket = dayTicket(d);
-      const per = 55 + ticket;
+      const per = 100 + ticket;
       const quote = /包车|整车/.test(d.move || '');
       return '<button class="sp-day' + (quote ? ' has-quote' : '') + '" data-sp="' + d.id + '">'
         + '<i>' + esc(d.date) + '</i>'
@@ -432,7 +488,7 @@
     host.innerHTML = '<div class="money-grid">' + cells.map(x =>
         '<div class="money-cell"><i>' + x[0] + '</i><b>' + x[1] + '</b><span>' + x[2] + '</span></div>').join('')
       + '</div>'
-      + '<div class="spend-rail"><p class="spend-cap">按天看：吃 55 元/人·天 ＋ 当天门票，住另计；点一天跳到当天明细</p>'
+      + '<div class="spend-rail"><p class="spend-cap">按天看：吃 100 元/人·天 ＋ 当天门票，住另计；点一天跳到当天明细</p>'
       + '<div class="spend-strip">' + strip + '</div></div>'
       + '<div class="money-foot"><a class="btn-line small" href="budget.html">费用计算器 →</a>'
       + '<p>四段整车包车待司机报价，拿到后进费用页重算。</p></div>';

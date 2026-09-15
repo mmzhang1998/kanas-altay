@@ -135,7 +135,7 @@
       const cp = state.map.lngLatToContainer(lnglat(p));
       const cls = p.kind === 'stay' ? 'stay' : (p.kind === 'hub' ? 'hub' : (p.kind === 'road' ? 'road' : 'sight'));
       state.ov.push(new AMap.Marker({ map: state.map, position: lnglat(p),
-        content: '<i class="gpin ' + cls + '"><b></b></i>', offset: new AMap.Pixel(-11, -11),
+        content: '<i class="gpin ' + cls + '"><b></b></i>', offset: new AMap.Pixel(-9, -9),
         zIndex: 120, extData: p.id, title: p.name }));
       const clash = taken.some(q => Math.hypot(q.x - cp.x, q.y - cp.y) < 40);
       if (!clash) {
@@ -185,7 +185,7 @@
     try {
       document.body.setAttribute('data-map', 'amap');   /* 先让容器可见，再建图，否则尺寸为 0 */
       state.map = new AMap.Map(host, { viewMode: '2D', zoom: 10.5, center: [87.15, 48.63],
-        mapStyle: 'amap://styles/whitesmoke', resizeEnable: true });
+        mapStyle: 'amap://styles/light', resizeEnable: true });
       zoomCtl(host);
       window.TripAMap.active = true;
       setTimeout(() => { if (state.map) { state.map.resize(); try { state.map.setBounds(viewBounds()); } catch (e) { } draw(true); } }, 150);

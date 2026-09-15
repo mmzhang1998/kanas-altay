@@ -63,28 +63,42 @@
 
   function current() {
     const day = state.day === 'all' ? null : TRIP.days.filter(d => d.id === state.day)[0];
-    const plan = TRIP.plans.filter(x => x.id === state.plan)[0] || TRIP.plans[0];
+    /* 方案口径只有一处：PlanView（顶部三个方按钮写的就是它）。
+       地图必须先认它，日期筛选、图例、里程统计才能跟着方案一起变。 */
+    const pv = window.PLAN_VIEW || state.plan || 'main';
+    const plan = TRIP.plans.filter(x => x.id === pv)[0] || TRIP.plans[0];
     const skip = { campsites: 1, luggage: 1, urumqi_night_train: 1 };
     const CORRIDOR = { altay_city: 1, back_to_altay: 1, ahe_road: 1 };   /* 阿禾走廊只在「含阿禾」里出现 */
+    const planDays = (plan && plan.day_places) ? Object.keys(plan.day_places) : [];
+    /* 方案级过滤：这一套方案不去的地方，实录也不画（切换方案时地图必须真的变） */
+    const inPlan = t => planDays.some(d => GeoMap.trackAllowed(plan, d, t));
     let tracks = [];
     if (day) {
-      tracks = day.tracks.map(track).filter(Boolean);
+      tracks = day.tracks.map(track).filter(Boolean)
+        .filter(t => GeoMap.trackAllowed(plan, day.id, t));
     } else {
       tracks = (window.TRACKS ? TRACKS.tracks : []).filter(t =>
         ((t.adopted_points || []).length || t.kind === 'drive' || /公路|通行|行车/.test(t.kind))
-        && (state.scope === 'full' || !/阿禾/.test(t.name)));
+        && (state.scope === 'full' || !/阿禾/.test(t.name)))
+        .filter(inPlan);
     }
     if (state.focus) tracks = tracks.filter(t => t.id === state.focus);
-    let pois = day ? day.places.map(place).filter(Boolean)
-      : (state.scope === 'full' ? TRIP.places : TRIP.places.filter(p => !skip[p.id] && !CORRIDOR[p.id]))
-          .filter(p => p.coord && p.coord[0] != null);
-    /* 直线腿彻底作废：改用 GeoMap 的三方案真实路网腿 */
-    const pv = window.PLAN_VIEW || 'main';
-    const ids = (!day && pv === 'all') ? ['main', 'alt_a', 'alt_b'] : (!day ? [pv] : null);
-    let planLegs = null;
-    if (ids) {
-      planLegs = [];
-      ids.forEach(id => { planLegs = planLegs.concat(GeoMap.planLegs(id, state.scope)); });
+    /* 图钉同样按方案过滤：备选A 不去白哈巴，就不该在白哈巴留一个点 */
+    let pois;
+    if (day) {
+      const dp = (plan.day_places || {})[day.id];
+      pois = ((dp && dp.length) ? dp.map(place) : day.places.map(place)).filter(Boolean);
+    } else {
+      pois = (state.scope === 'full' ? TRIP.places : TRIP.places.filter(p => !skip[p.id] && !CORRIDOR[p.id]))
+        .filter(p => p.coord && p.coord[0] != null);
+    }
+    /* 直线腿彻底作废：改用 GeoMap 的真实路网腿，并且按当前方案＋当前日期过滤。
+       实录那一路由上面的 tracks 负责，这里只取道路几何，避免同一段路叠两层线。 */
+    const ids = pv === 'all' ? ['main', 'alt_a', 'alt_b'] : [pv];
+    let planLegs = GeoMap.planLegsRaw(ids, state.scope, day ? day.id : null)
+      .filter(l => l.src !== 'kml');
+    if (state.focus) planLegs = [];
+    if (!day) {
       const seen = {}; const pp2 = [];
       ids.forEach(id => {
         const pl2 = TRIP.plans.filter(x => x.id === id)[0];
@@ -113,9 +127,9 @@
       if (HIDE[l.src === 'schematic' ? 'schem' : l.mode]) return;
       const st = l.src === 'schematic' ? GeoMap.STYLE.schem
         : ((c.planView === 'all') ? { color: GeoMap.PLAN_COLOR[l.plan] || GeoMap.STYLE.drive.color,
-                                      width: 3.2, dash: null } : GeoMap.STYLE[l.mode]) || GeoMap.STYLE.drive;
+                                      width: 2.8, dash: null } : GeoMap.STYLE[l.mode]) || GeoMap.STYLE.drive;
       const ll = toGCJ(l.points);
-      L.polyline(ll, { color: '#ffffff', weight: st.width + 2.6, opacity: .92,
+      L.polyline(ll, { color: '#ffffff', weight: st.width + 2.0, opacity: .92,
                        interactive: false, lineCap: 'round', lineJoin: 'round' }).addTo(layers.lines);
       L.polyline(ll, { color: st.color, weight: st.width, opacity: .96, dashArray: st.dash,
                        lineCap: 'round', lineJoin: 'round' })
@@ -143,10 +157,10 @@
       const full = (t.adopted_points || []).length ? t.points : null;
       if (full && full.length > 1) {                       /* 完整轨迹压淡，采用段加粗：一眼看出"走哪段" */
         L.polyline(toGCJ(full), { color: isHike ? COLOR.hike : COLOR.drive,
-          weight: 2, opacity: .28, interactive: false }).addTo(layers.lines);
+          weight: 1.6, opacity: .22, interactive: false }).addTo(layers.lines);
       }
       L.polyline(toGCJ(g), {
-        color: isHike ? COLOR.hike : COLOR.drive, weight: isHike ? 3.5 : 4,
+        color: isHike ? COLOR.hike : COLOR.drive, weight: isHike ? 2.8 : 3.2,
         opacity: .95, dashArray: isHike ? '1 7' : null, lineCap: 'round',
       }).bindTooltip(t.name + ' · ' + (t.distance || '') + ' km',
         { sticky: true, className: 'tip-line' }).addTo(layers.lines);
@@ -297,7 +311,7 @@
                           maxBounds: WORLD, maxBoundsViscosity: .9, zoomSnap: .5,
                           preferCanvas: false }).fitBounds(BOUNDS.full, { padding: [30, 30], maxZoom: 11 });
       layers.base = L.tileLayer(
-        'https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}',
+        'https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=7&x={x}&y={y}&z={z}',
         { subdomains: ['1', '2', '3', '4'], minZoom: 7, maxZoom: 18, noWrap: true,
           updateWhenIdle: true, updateWhenZooming: false, keepBuffer: 2,
           attribution: '© 高德地图' }).addTo(map);
