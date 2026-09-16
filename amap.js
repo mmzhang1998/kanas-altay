@@ -241,38 +241,43 @@
       document.body.setAttribute('data-map', 'amap');   /* 先让容器可见，再建图，否则尺寸为 0 */
       state.map = new AMap.Map(host, { viewMode: '2D', zoom: 10.5, center: [87.15, 48.63],
         mapStyle: 'amap://styles/light', resizeEnable: true });  /* light 预设：国境线比默认浅一档，同时保住山区／景区的深灰晕染（whitesmoke 会把灰底一起洗掉） */
+      const map = state.map;
+      let amapCompleted = false;
       zoomCtl(host);
       window.TripAMap.active = true;
       setTimeout(() => { if (state.map) { state.map.resize(); try { state.map.setBounds(viewBounds()); } catch (e) { } draw(true); } }, 150);
       const svg = document.querySelector('#routeMap');
       if (svg) svg.style.display = 'none';
       window.addEventListener('planview', () => draw(true));
-      state.map.on('complete', () => { draw(); scheduleFit(); });
+      map.on('complete', () => {
+        if (state.map !== map) return;
+        amapCompleted = true;
+        draw();
+        scheduleFit();
+      });
       /* 缩放只重算"名字要不要让位"，绝不重建图钉与名牌：
          重算的是显隐，位置始终由地图自己带着走，所以不会闪也不会漂。 */
-      state.map.on('zoomend', () => { if (state.map && state.pinOv.size) drawPinsAMap(pois()); });
-      window.addEventListener('resize', () => { if (state.map && state.day === 'all') scheduleFit(); });
+      map.on('zoomend', () => { if (state.map === map && state.pinOv.size) drawPinsAMap(pois()); });
+      window.addEventListener('resize', () => { if (state.map === map && state.day === 'all') scheduleFit(); });
       draw();
-      /* 看门狗：Key 域名白名单未覆盖当前域名时瓦片会鉴权失败——5 秒内没有画布就
-         交还给 Leaflet+本地路网，绝不留一张灰图给用户 */
+      /* 看门狗只认高德自己的 complete 事件；不能再拿 Leaflet 的 canvas 来判定高德是否成功。 */
       setTimeout(() => {
-        const bad = performance.getEntriesByType('resource').some(e =>
-          /amap\.com/.test(e.name) && (e.responseStatus >= 400 || e.responseStatus === 0));
-        const ok = !bad && document.querySelectorAll('#leafmap canvas').length > 0;
-        if (!ok && window.TripLeaf) {
-          try { state.map.destroy(); } catch (e) { }
-          state.map = null;
-          window.TripAMap.active = false;
-          document.body.setAttribute('data-map', 'leaflet');
-          const svg = document.querySelector('#routeMap');
-          if (svg) svg.style.display = '';
-          if (TripLeaf.boot()) {
-            const note = document.querySelector('#mapNote');
-            if (note) note.innerHTML = '高德瓦片在当前域名未授权：已改用离线真实路网底图<br>'
-              + '在高德控制台把本域名加入 Key 白名单即可切回高德底图';
-          }
+        if (state.map !== map || amapCompleted || !window.TripLeaf) return;
+        const requestFailed = performance.getEntriesByType('resource').some(e =>
+          /amap\.com/.test(e.name) && e.responseStatus >= 400);
+        try { map.destroy(); } catch (e) { }
+        state.map = null;
+        window.TripAMap.active = false;
+        document.body.setAttribute('data-map', 'leaflet');
+        const svg = document.querySelector('#routeMap');
+        if (svg) svg.style.display = '';
+        if (TripLeaf.boot()) {
+          const note = document.querySelector('#mapNote');
+          if (note) note.innerHTML = requestFailed
+            ? '高德地图请求失败：已改用离线真实路网底图'
+            : '高德地图加载超时：已改用离线真实路网底图';
         }
-      }, 2500);
+      }, 5000);
       return true;
     } catch (e) { return false; }
   }
