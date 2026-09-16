@@ -625,16 +625,39 @@
     const e1 = ENG(); if (e1) e1.scope(scope);
     drawMap();
   }));
-  /* 引擎启动顺序：高德 JS API（已就绪时）→ Leaflet＋高德瓦片 → app.js 的 SVG。
-     本地 file:// 直接走第二条（公开瓦片无需域名鉴权，已实测可用）。 */
+  /* 线上高德和 Leaflet 不能同时抢同一个容器：先等高德，明确失败或超时才启动 Leaflet。
+     本地 file://／localhost 没有可鉴权域名，仍直接使用 Leaflet。 */
+  const REMOTE_MAP = /^https?:$/.test(location.protocol)
+    && !/^(localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\])$/.test(location.hostname || '');
+  function bootLeaflet() {
+    if (window.TripAMap && TripAMap.active) return false;
+    if (window.TripLeaf && !TripLeaf.ready && TripLeaf.boot()) { AMAP = false; return true; }
+    return !!(window.TripLeaf && TripLeaf.ready);
+  }
+  function bootAMap() {
+    if (window.AMap && window.TripAMap && TripAMap.boot()) {
+      AMAP = true;
+      try { drawMap(); } catch (e) {}
+      return true;
+    }
+    return false;
+  }
   function bootEngine() {
-    if (window.AMap && window.TripAMap && TripAMap.boot()) { AMAP = true; }
-    else if (window.TripLeaf && TripLeaf.boot()) { AMAP = false; }
+    if (bootAMap()) return;
+    if (!REMOTE_MAP) bootLeaflet();
   }
   window.addEventListener('amap-ready', function () {
-    if (AMAP) return;
-    if (window.TripAMap && TripAMap.boot()) { AMAP = true; try { drawMap(); } catch (e) {} }
+    if (AMAP || (window.TripAMap && TripAMap.active)) return;
+    if (!bootAMap()) bootLeaflet();
   });
+  window.addEventListener('amap-failed', function () {
+    if (!AMAP) bootLeaflet();
+  });
+  if (REMOTE_MAP) {
+    setTimeout(function () {
+      if (!AMAP && !(window.TripAMap && TripAMap.active)) bootLeaflet();
+    }, 7000);
+  }
 
   bootEngine();
   selectDay('all');

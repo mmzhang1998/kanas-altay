@@ -100,6 +100,7 @@
   var s=document.createElement("script");s.async=true;
   s.src="https://webapi.amap.com/maps?v=2.0&key=b579fc947bc5de2d4fe8ef587fd7fbac&plugin=AMap.Driving,AMap.ToolBar";
   s.onload=function(){window.dispatchEvent(new Event("amap-ready"));};
+  s.onerror=function(){window.dispatchEvent(new Event("amap-failed"));};
   document.head.appendChild(s);
 })();
 </script>
