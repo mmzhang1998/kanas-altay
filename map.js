@@ -4,7 +4,7 @@
 (function () {
   /* 颜色只有一处定义：一律引用 GeoMap.STYLE（geomap.js）。
      同一套设计语言必须让 SVG／Leaflet／高德三套引擎对同一种走法给出同一个颜色。 */
-  const FALLBACK = { drive: '#2A5750', shuttle: '#5C8A80', hike: '#7FA090', schem: '#A8A79E',
+  const FALLBACK = { drive: '#1E4A42', shuttle: '#1B5C7D', hike: '#A63A6B', schem: '#8A948D',
                      bus: '#4c7d8c', train: '#6f6a86', intent: '#9FB0A8' };
   const COLOR = new Proxy({}, {
     get: (_, k) => {
@@ -230,6 +230,18 @@
      重造的瞬间会消失再出现、位置也会从旧坐标跳过来——这就是"名字时有时无、还会漂移"的根因。
      现在同一个地点自始至终是同一个图钉、同一个标签 DOM，地图平移缩放时它跟着走，不会闪。 */
   const pinCache = new Map();
+  /* 地图标签专用短名：只影响图上这一行字，不改站点其它任何文案。
+     全名「小阿什克村＋美丽峰方向」有 11 个字符，在禾木—喀纳斯密集区必然被挤掉。 */
+  const SHORT = { xiaoshike_meilifeng: '小阿什克·美丽峰', ahe_road: '阿禾公路',
+                  tiejia_road: '铁贾公路', kanas_village: '喀纳斯村',
+                  hemu_village: '禾木村', yaze_lake: '鸭泽湖', guanyutai: '观鱼台',
+                  baihaba: '白哈巴村', kanas_hub: '换乘中心' };
+  function labelOf(p) { return (p && (SHORT[p.id] || p.name)) || ''; }
+  /* 用户明确点名"地图上必须看得见"的地点：过夜点/枢纽/道路之外，这些点也豁免避让淘汰，
+     否则会被相邻的同类标签挤掉，读者就会以为它们没被标出来。 */
+  const NAMED = { xiaoshike_meilifeng: 1, hemu_village: 1, yaze_lake: 1, kanas_village: 1,
+                  guanyutai: 1, baihaba: 1, kanas_hub: 1 };
+
   /* 每个地点固定的标签朝向。图钉离开当前方案再回来时，必须还用原来那一侧——
      否则重新出现会换到另一侧，看起来就是名字"跳了一下"。 */
   const dirCache = new Map();
@@ -256,7 +268,7 @@
         for (let i = 0; i < DIRS.length; i++) {
           const ox = DIRS[i][1][0], oy = DIRS[i][1][1];
           const lx = cp.x + ox + (ox < 0 ? -70 : 8), ly = cp.y + oy - 8;
-          const box = { x: lx, y: ly, w: p.name.length * 12 + 10, h: 20 };
+          const box = { x: lx, y: ly, w: labelOf(p).length * 14 + 24, h: 22 };
           const hit = taken.some(q => !(box.x + box.w < q.x - 3 || box.x > q.x + q.w + 3
                                      || box.y + box.h < q.y - 2 || box.y > q.y + q.h + 2));
           if (!hit) { pick = DIRS[i]; taken.push(box); break; }
@@ -287,9 +299,9 @@
         { icon: pinIcon(p), title: p.name, riseOnHover: true, zIndexOffset: 400 });
       const pc = 'tip-name prio' + (PRIO[p.kind] ?? 3) + ' pid-' + p.id;
       /* 标签常驻；是否显示交给避让逻辑，缩放后会放出更多名字 */
-      mk.bindTooltip(p.name, { permanent: true, direction: w.dir[0], offset: w.dir[1],
+      mk.bindTooltip(labelOf(p), { permanent: true, direction: w.dir[0], offset: w.dir[1],
                                className: pc + ' tip-perm' });
-      mk.on('click', () => openDrawer(p));
+      mk.on('click', () => openDrawer(p, placeAnchor(p)));
       mk.addTo(layers.pins);
       pinCache.set(id, { mk: mk, dir: w.dir });
     });
@@ -311,21 +323,67 @@
       const m = /prio(\d)/.exec(n.className);
       const idm = /pid-([A-Za-z0-9_]+)/.exec(n.className);
       const r = n.getBoundingClientRect();
+      /* 关键：减去上一轮加上的错位量，还原到"没有错位时的基准位置"再参与判定。
+         否则自己加的 margin 会改变下一轮的测量结果，几何签名永远不收敛，
+         标签就会保持在一个碰巧没被检测到的位置——手机上两个名字叠在一起就是这么来的。 */
+      const off = parseFloat(n.style.marginTop) || 0;
+      const offX = parseFloat(n.style.marginLeft) || 0;
       return { n: n, p: m ? +m[1] : 3, id: idm ? idm[1] : '',
-               x: r.left - base.left, y: r.top - base.top, w: r.width, h: r.height };
+               x: r.left - base.left - offX, y: r.top - base.top - off, w: r.width, h: r.height };
     }).sort((a, b) => (a.p - b.p) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
       /* 过夜点 → 枢纽 → 道路 → 景点；同级按地点 id 排，恒定，与元素顺序和测量时机无关 */
+    /* 地图上的浮层与图例本身要占位置：标签压到"喀纳斯/阿勒泰全程"胶囊或图例上，
+       字就会被盖住半个。把它们当作已占用的禁区先放进去，标签自然会避开。 */
     const ok = [];
+    ['.map-overlay', '.map-legend'].forEach(sel => {
+      const el = host.querySelector(sel);
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      if (r.width && r.height) ok.push({ x: r.left - base.left - 4, y: r.top - base.top - 4,
+                                         w: r.width + 8, h: r.height + 8 });
+    });
+    /* 骨架标签（过夜点 prio0／枢纽 prio1／道路 prio2）与用户点名地点永不隐藏。
+       它们撞车时不做淘汰，而是沿纵向找一个空档错开——喀纳斯湖区几个点投影后只差几像素，
+       一味淘汰就会让读者以为观鱼台、鸭泽湖这些点没上地图。 */
+    const OFFS = [0, -24, 24, -48, 48, -72, 72, -96, 96];
+    /* 左右边界：地图容器 overflow:hidden，越界的标签会被直接切掉半个字。
+       手机窄屏上"阿禾公路""阿勒泰市"就贴在右边缘，所以先算一个整体横移量，
+       让每一个标签都完整落在画幅里；再纵向找空档避让其他标签。 */
+    const PADX = 6, PADY = 6;
     items.forEach(o => {
-      const b = { x: o.x, y: o.y, w: o.w, h: o.h };
-      const hit = ok.some(q => !(b.x + b.w < q.x - 4 || b.x > q.x + q.w + 4
-                              || b.y + b.h < q.y - 3 || b.y > q.y + q.h + 3));
-      o.n.classList.toggle('tip-hide', hit);
-      if (!hit) ok.push(b);
+      const keep = o.p <= 2 || !!NAMED[o.id];
+      let fixX = 0;
+      const overR = (o.x + o.w) - (base.width - PADX);
+      const overL = PADX - o.x;
+      if (overR > 0) fixX = -Math.ceil(overR);
+      else if (overL > 0) fixX = Math.ceil(overL);
+      let placed = null;
+      for (let i = 0; i < OFFS.length; i++) {
+        const yTop = o.y + OFFS[i];
+        const yClamped = Math.max(PADY, Math.min(yTop, base.height - o.h - PADY));
+        const b = { x: o.x + fixX, y: yClamped, w: o.w, h: o.h };
+        const hit = ok.some(q => !(b.x + b.w < q.x - 4 || b.x > q.x + q.w + 4
+                                || b.y + b.h < q.y - 3 || b.y > q.y + q.h + 3));
+        if (!hit) { placed = { b: b, off: yClamped - o.y, fixX: fixX }; break; }
+        if (!keep) break;                       /* 可淘汰的标签：撞了就藏，不找空档 */
+      }
+      const off = placed ? placed.off : 0;
+      const fx = placed ? placed.fixX : 0;
+      o.n.style.marginTop = off ? off + 'px' : '';
+      o.n.style.marginLeft = fx ? fx + 'px' : '';
+      /* 错位超过一格就补一条引线把标签系回图钉。没有它，手机上为避让而抬高的
+         "鸭泽湖"会飘在图钉外 96px 处，读者根本认不出它标的是哪个点。 */
+      o.n.classList.toggle('tip-lead', !!off && Math.abs(off) >= 24);
+      o.n.classList.toggle('lead-up', off < 0);
+      o.n.classList.toggle('lead-down', off > 0);
+      if (off) o.n.style.setProperty('--lead', Math.abs(off) + 'px');
+      o.n.classList.toggle('tip-hide', !placed);
+      if (placed) ok.push(placed.b);
     });
     /* 几何签名：只含位置尺寸，不含显隐——显隐不影响几何，所以几何不变即结果已定案 */
     return items.map(o => o.id + ':' + Math.round(o.x) + ',' + Math.round(o.y)
-      + ',' + Math.round(o.w) + ',' + Math.round(o.h)).join('|');
+      + ',' + Math.round(o.w) + ',' + Math.round(o.h)
+      + ',' + Math.round(parseFloat(o.n.style.marginLeft) || 0)).join('|');
   }
   function reclutter() {
     clearTimeout(dcl); dclPass = 0; dclSig = '';
@@ -342,32 +400,86 @@
     dclPass = 0; dclSig = '';
   }
 
-  function openDrawer(p) {
+  /* ── 图上浮卡：点图钉才出现，贴在那一颗钉旁边 ───────────────────────
+     不放整墙卡片，也不做整屏侧栏。只给"这个名字是什么、我在这待多久、下一步去哪看"。 */
+  const KIND_TXT = { stay: '过夜点', sight: '游玩点', hub: '枢纽', road: '路段', logic: '行程节点' };
+  function shortDuration(p) {
+    const raw = String(p.duration || p.hike || '').split(/[（(；;。]/)[0].trim();
+    if (!raw) return '';
+    const m = /^([0-9０-９][0-9０-９.．\-—~～至到]*(?:\s*[—~～至到]\s*[0-9０-９.．]+)?\s*(?:分钟|小时|h|min|天|整天|个半天)[^，,]?)/.exec(raw);
+    let t = (m ? m[1] : raw).replace(/^(约|大约|全程)?\s*/, '');
+    /* 去掉"9/28抵达日""9/26 上午"这类日期/时段前缀：浮卡上一行已经写了日期，不重复 */
+    t = t.replace(/^[0-9]{1,2}\/[0-9]{1,2}\s*(抵达日|当天|当日)?\s*/, '')
+         .replace(/^(上午|下午|中午|早上|清晨|傍晚|夜晚|当天|抵达日)\s*/, '').trim();
+    if (!t) return '';
+    return t.length > 14 ? t.slice(0, 14) + '…' : t;
+  }
+  function dayLine(p) {
+    const ds = (p.plan_dates && p.plan_dates.length) ? p.plan_dates
+      : ((p.days || []).map(x => x.slice(0, 2).replace(/^0/, '') + '/' + x.slice(2).replace(/^0/, '')));
+    return ds.join(' · ');
+  }
+  function placeAnchor(p) {
+    try {
+      if (!map || !p.coord || p.coord[0] == null) return null;
+      const cp = map.latLngToContainerPoint(poiLL(p));
+      const size = map.getSize();
+      if (cp.x < 0 || cp.y < 0 || cp.x > size.x || cp.y > size.y) return null;
+      return { x: cp.x, y: cp.y };
+    } catch (e) { return null; }
+  }
+  let drawerPoi = null;
+  function openDrawer(p, anchor) {
     const d = document.querySelector('#mapDrawer');
-    if (!d) return;
-    const slice = null;
-    const dayIds = p.days || [];
+    if (!d || !p) return;
+    drawerPoi = p;
     const g = TRIP.guides.filter(x => x.place === p.id)[0];
+    const dur = shortDuration(p);
+    const n = (p.photos || []).length;
+    const cover = p.thumb || ((p.photos || [])[0] || {}).file;
+    const dl = dayLine(p);
     d.innerHTML = '<button class="drawer-x" aria-label="关闭">×</button>'
-      + (p.thumb ? '<img class="drawer-cover" src="' + esc2(p.thumb) + '" alt="">' : '<div class="drawer-cover none">暂无现场照片</div>')
-      + '<div class="drawer-in"><p class="eyebrow">'
-      + esc2((p.days || []).map(x => x.slice(0, 2).replace(/^0/, '') + '/' + x.slice(2).replace(/^0/, '')).join(' · ')
-             || p.type || '地图速览') + '</p>'
-      + '<h3>' + esc2(p.name) + '</h3><p>' + esc2(p.conclusion) + '</p>'
-      + '<div class="drawer-meta"><span>' + esc2(p.hike || p.duration || p.type || '路过／枢纽') + '</span>'
-      + (dayIds.length ? '<span>' + dayIds.map(x => x.slice(0, 2) + '/' + x.slice(2)).join('、') + '</span>' : '')
-      + '<span>' + (p.photo_count || 0) + ' 张现场照片' + (p.confidence ? ' · ' + esc2(p.confidence) : '') + '</span></div>'
-      + '<p class="drawer-src">坐标来源：' + esc2(p.coord_source || '—') + '</p>'
-      + (g ? '<button class="drawer-guide" data-guide="' + g.id + '">查看' + esc2(p.name) + '官方导览图 →</button>' : '')
-      + '<a class="drawer-go" href="place.html?id=' + p.id + '">打开地点页（怎么玩／机位／避坑／原帖）→</a>'
-      + '<div class="drawer-days">' + dayIds.map(x => {
-          const dd = TRIP.days.filter(y => y.id === x)[0];
-          return dd ? '<a href="day.html?id=' + x + '">' + dd.date + ' ' + esc2(dd.short) + '</a>' : '';
-        }).join('') + '</div></div>';
+      + (cover ? '<img class="drawer-cover" src="' + esc2(cover) + '" alt="" loading="lazy">'
+               : '<div class="drawer-cover none">这一站没有留下现场照片</div>')
+      + '<div class="drawer-in">'
+      + '<p class="drawer-eyebrow">' + esc2(KIND_TXT[p.kind] || '途经点')
+      + (dl ? ' · ' + esc2(dl) : '') + '</p>'
+      + '<h3>' + esc2(p.name) + '</h3>'
+      + (p.conclusion ? '<p class="drawer-lead">' + esc2(p.conclusion) + '</p>' : '')
+      + '<div class="drawer-facts">'
+      + (dur ? '<span><i>在这待多久</i><b>' + esc2(dur) + '</b></span>' : '')
+      + (n ? '<span><i>现场照片</i><b>' + n + ' 张</b></span>' : '')
+      + '</div>'
+      + '<div class="drawer-acts">'
+      + '<a class="drawer-cta" href="place.html?id=' + p.id + '">查看完整详情</a>'
+      + (g ? '<button class="drawer-ghost" data-guide="' + g.id + '">官方导览图</button>' : '')
+      + '</div></div>';
+    placeDrawer(d, anchor);
     d.classList.add('open');
     d.querySelector('.drawer-x').onclick = () => d.classList.remove('open');
     const gb = d.querySelector('[data-guide]');
     if (gb) gb.onclick = () => Guide.open(g.file, p.name, g.facility_lines);
+  }
+  /* 卡片贴在那一颗钉旁边；靠边时自动翻到另一侧，并保证整张卡留在画幅内 */
+  function reposition() {
+    const d = document.querySelector('#mapDrawer');
+    if (!d || !d.classList.contains('open') || !drawerPoi) return;
+    placeDrawer(d, placeAnchor(drawerPoi));
+  }
+  function placeDrawer(d, anchor) {
+    const stage = d.parentElement;
+    if (!stage) return;
+    const sw = stage.clientWidth, sh = stage.clientHeight;
+    if (!anchor || !sw) { d.style.left = ''; d.style.top = ''; d.style.right = ''; return; }
+    const cw = Math.min(312, sw - 24);
+    const ch = Math.min(d.scrollHeight || 380, sh - 24);
+    let x = anchor.x + 22, y = anchor.y - 24;
+    if (x + cw > sw - 12) x = anchor.x - cw - 22;
+    x = Math.max(12, Math.min(x, sw - cw - 12));
+    y = Math.max(12, Math.min(y, sh - ch - 12));
+    d.style.left = Math.round(x) + 'px';
+    d.style.top = Math.round(y) + 'px';
+    d.style.right = 'auto';
   }
 
   function boot() {
@@ -402,10 +514,10 @@
       function size() { if (map) { map.invalidateSize({ animate: false }); } }
       if (window.ResizeObserver) { new ResizeObserver(size).observe(host); }
       window.addEventListener('resize', size);
-      window.addEventListener('planview', () => { if (ready) draw(true); });
+      window.addEventListener('planview', () => { if (ready) { dirCache.clear(); draw(true); } });
       /* 缩放只重算标签显隐，绝不重建图钉：重建会让所有名字消失再冒出来，
          还会在动画期间落到旧坐标上，看起来就是"闪烁 + 漂移"。 */
-      map.on('zoomend moveend', reclutter);
+      map.on('zoomend moveend', function () { reclutter(); reposition(); });
       /* 首帧别反复重画：等容器尺寸稳定后画一次，瓦片到位再补一次即可 */
       setTimeout(function () { size(); draw(); }, 120);
       setTimeout(function () { size(); reclutter(); }, 760);
@@ -439,16 +551,35 @@
     }
   }
 
+  /* 日程里的地名点一下：地图平移到这一点并把浮卡打开。浅入口，不用先找图钉。 */
+  function focusPlace(id, day) {
+    const p = place(id);
+    if (!p || !ready || !map) return false;
+    if (day) { state.day = day; }
+    state.focus = null; draw(true);
+    if (p.coord && p.coord[0] != null) map.panTo(poiLL(p), { animate: true, duration: .45 });
+    reclutter();
+    setTimeout(() => openDrawer(p, placeAnchor(p)), 320);
+    setTimeout(() => openDrawer(p, placeAnchor(p)), 700);
+    return true;
+  }
+
   window.TripLeaf = {
     boot: boot,
     openDrawer: openDrawer,
+    focusPlace: focusPlace,
+    /* 线路详情用同一只抽屉，但它不跟着图钉走 */
+    unanchor() { drawerPoi = null; },
     get ready() { return ready; },
     get active() { return active; },
     /* 外部改了筛选状态（图例开关等）后，让 Leaflet 按新状态重画。
        没有这个入口，图例按钮只会重画背后的 SVG，用户看到的地图一动不动——这正是"筛选不生效"的根因。 */
     refresh() { if (!ready) return; draw(); },
     select(day) { state.day = day || 'all'; state.focus = null; draw(); },
-    plan(id) { state.plan = id || 'main'; state.day = 'all'; state.focus = null; draw(); },
+    plan(id) { state.plan = id || 'main'; state.day = 'all'; state.focus = null;
+      /* 方案一换，屏幕上的点列就变了；旧朝向是在旧点列里挑的，必须重挑，
+         否则新点的标签会送到已被占用的方向，避让时被整片淘汰。 */
+      dirCache.clear(); draw(); },
     scope(s) { state.scope = s || 'core'; if (!ready) return;
       if (state.day === 'all') map.flyToBounds(BOUNDS[state.scope], { duration: .5 }); draw(); },
     focus(id) { state.focus = id || null; draw(); },

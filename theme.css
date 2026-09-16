@@ -7,7 +7,7 @@
   --ink:#181D1A; --ink-2:#3E4642; --muted:#6B7570; --faint:#98A19C;
   --line:rgba(24,29,26,.10); --line-soft:rgba(24,29,26,.06); --line-strong:rgba(24,29,26,.20);
   --pine:#123B33; --pine-2:#1C5247; --gold:#B0742C; --teal:#2E7F6E;
-  --map-drive:#B0742C; --map-shuttle:#2E7F6E; --map-hike:#C9603F; --map-camp:#C0A15C;
+  --map-drive:#1E4A42; --map-shuttle:#1B5C7D; --map-hike:#A63A6B; --map-camp:#C0A15C;
   --r-xs:4px; --r-s:6px; --r-m:10px; --r-l:14px; --r-pill:999px;
   --fs-xs:12px; --fs-sm:13px; --fs-body:14.5px; --fs-lead:16.5px; --fs-h3:17px;
   --sp-1:8px; --sp-2:14px; --sp-3:20px; --sp-4:28px;
@@ -127,7 +127,6 @@ table.cmp th.cur,table.cmp td.cur{ background:rgba(18,59,51,.045); }
   background:rgba(255,255,255,.92); font-size:12px; padding:5px 12px; color:#5C6661; }
 .scope-switch button.active{ border-color:var(--pine); color:var(--pine); background:#fff; }
 .map-legend{ font-size:12px; gap:10px 18px; padding:10px 16px; }
-.map-drawer{ border-radius:0 var(--r-l) var(--r-l) 0; }
 .leg-figs div{ border-radius:var(--r-s); border:1px solid var(--line-soft); background:#F7F6F1; }
 
 /* ── 详情页（detail.css 之上收口）──────────────────────────────── */
@@ -138,3 +137,38 @@ table.cmp th.cur,table.cmp td.cur{ background:rgba(18,59,51,.045); }
 /* ── 地图标签去重：撞车的标签只隐藏文字，图钉不消失 ───────────────── */
 .leaflet-tooltip.tip-name.tip-hide{ opacity:0 !important; visibility:hidden !important; }
 .leaflet-tooltip.tip-name.tip-perm{ pointer-events:none; }
+
+/* ── 手机端地图：画幅、图例、方案与日期条都要能用 ───────────────── */
+@media (max-width:680px){
+  /* 画幅优先给地图，不要让日期条与图例把地图挤成窄带 */
+  .map-stage{ height:58vh; min-height:360px; max-height:520px; }
+  /* 图例压成一行：方案色条在手机端隐藏（方案名上方按钮已写得更大），只留走法图例横向滚动 */
+  .map-legend{ display:block; flex-wrap:nowrap; overflow-x:auto; -webkit-overflow-scrolling:touch;
+    padding:8px 12px; scrollbar-width:none; }
+  .map-legend::-webkit-scrollbar{ display:none; }
+  .map-legend .lg-plans{ display:none; }
+  .map-legend .lg-kinds{ display:flex; flex-wrap:nowrap; gap:8px 14px; align-items:center; width:max-content; }
+  .map-legend button,.map-legend span{ white-space:nowrap; }
+  /* 缩放控件不要和右下角说明重叠 */
+  .leaflet-control-zoom,.amap-toolbar{ margin-bottom:52px !important; }
+  /* 方案方按钮在两列内排满，不横向溢出 */
+  #planBtns{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px;
+    overflow:visible; flex-wrap:wrap; }
+  #planBtns button{ min-width:0; padding:10px 8px; }
+  #planBtns button .pp-sub{ font-size:10.5px; }
+  /* 地图上方的范围按钮贴左，不再压到画幅中央 */
+  .map-overlay{ top:10px; left:10px; right:10px; }
+  /* 费用小标题在窄屏折行，别把"按天算"挤成竖排 */
+  .md-head{ display:block; }
+  .md-head b{ display:inline-block; margin-bottom:6px; }
+  .md-head span{ display:block; line-height:1.6; }
+  .md-head .btn-line{ display:inline-block; margin:10px 0 0; }
+}
+
+/* ── 标签引线：避让把名字抬离图钉时，用一条细线把两者系起来 ───────────
+   地图上密集的点（喀纳斯湖区几个观景点投影后只差几像素）必须错开才能读，
+   但错开的标签不能"飘"着——这条 1px 的线就是它的归属说明。 */
+.leaflet-tooltip.tip-name.tip-lead::before{ content:""; position:absolute; left:-14px; width:1px;
+  background:var(--faint,#8A948D); opacity:.55; pointer-events:none; }
+.leaflet-tooltip.tip-name.tip-lead.lead-up::before{ top:50%; height:var(--lead,24px); }
+.leaflet-tooltip.tip-name.tip-lead.lead-down::before{ bottom:50%; height:var(--lead,24px); }

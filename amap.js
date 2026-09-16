@@ -11,7 +11,7 @@
   const CORRIDOR = { altay_city: 1, back_to_altay: 1, ahe_road: 1, urumqi_night_train: 1 };
   /* 颜色只有一处定义：与 map.js 一致，一律引用 GeoMap.STYLE（geomap.js）。
      否则高德引擎接管时会把新配色悄悄退回旧配色。 */
-  const FALLBACK = { drive: '#2A5750', shuttle: '#5C8A80', hike: '#7FA090', schem: '#A8A79E' };
+  const FALLBACK = { drive: '#1E4A42', shuttle: '#1B5C7D', hike: '#A63A6B', schem: '#8A948D' };
   const COLOR = new Proxy({}, {
     get: (_, k) => {
       const st = (window.GeoMap && GeoMap.STYLE) || {};
@@ -179,7 +179,16 @@
                    'color': '#20302A', 'font-size': '11.5px', 'font-weight': '600', 'padding': '0',
                    'text-shadow': '0 0 3px #FBFAF7,0 0 3px #FBFAF7,0 0 6px #FBFAF7' } });
         if (tx.dom) tx.dom.classList.add('tip-name');
-        mk.on('click', () => { if (window.TripLeaf && TripLeaf.openDrawer) TripLeaf.openDrawer(p); });
+        mk.on('click', function () {
+          /* 浮卡贴在那一颗钉旁边：用高德自己的坐标换算，不经过 Leaflet */
+          let a = null;
+          try {
+            const cp = state.map.lngLatToContainer(lnglat(p));
+            const sz = state.map.getSize();
+            if (cp.x > 0 && cp.y > 0 && cp.x < sz.getWidth() && cp.y < sz.getHeight()) a = { x: cp.x, y: cp.y };
+          } catch (err) {}
+          if (window.TripLeaf && TripLeaf.openDrawer) TripLeaf.openDrawer(p, a);
+        });
         e = { mk: mk, tx: tx };
         state.pinOv.set(id, e);
       }
@@ -268,8 +277,30 @@
     } catch (e) { return false; }
   }
 
+  /* 日程里的地名点一下：地图移到这一点并把浮卡打开（与 Leaflet 引擎同一入口） */
+  function focusPlace(id, day) {
+    const p = place(id);
+    if (!p || !state.map || !p.coord || p.coord[0] == null) return false;
+    if (day) state.day = day;
+    state.focus = null; draw();
+    state.map.panTo(lnglat(p));
+    setTimeout(function () {
+      let a = null;
+      try {
+        const cp = state.map.lngLatToContainer(lnglat(p));
+        const sz = state.map.getSize();
+        if (cp.x > 0 && cp.y > 0 && cp.x < sz.getWidth() && cp.y < sz.getHeight()) a = { x: cp.x, y: cp.y };
+      } catch (err) {}
+      if (window.TripLeaf && TripLeaf.openDrawer) TripLeaf.openDrawer(p, a);
+    }, 460);
+    return true;
+  }
+
   window.TripAMap = {
     boot: boot,
+    focusPlace: focusPlace,
+    /* 线路详情用同一只抽屉，且不跟着图钉走 */
+    unanchor() { if (window.TripLeaf && TripLeaf.unanchor) TripLeaf.unanchor(); },
     /* 与 Leaflet 同名接口：外部（图例等）改了筛选状态后统一调 refresh()。 */
     refresh() { if (window.TripAMap.active) draw(); },
     select(day) { state.day = day || 'all'; draw(); },

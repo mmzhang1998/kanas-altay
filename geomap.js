@@ -4,10 +4,13 @@
    本文件不产生任何事实：颜色、线型、标记样式都在这里，数据一律外部传入。 */
 window.GeoMap = (function () {
   const R = window.ROADS || { water: [], ctx: [], legs: [] };
+  /* 配色沿用读者认可的版本：车行＝墨绿实线，区间车／摆渡＝青绿实线，徒步＝浅草绿点线。
+     三种走法靠色相＋线型同时区分，且都不与浅色底图的路网撞色。
+     改色必须同步本文件与 map.js / amap.js 的 FALLBACK。 */
   const STYLE = {
     drive:   { color: '#2A5750', width: 3.6, dash: null,  label: '包车／拼车（导航道路）' },
-    shuttle: { color: '#5C8A80', width: 3.0, dash: null,  label: '景区区间车／摆渡（导航道路）' },
-    hike:    { color: '#7FA090', width: 3.0, dash: '0.1 7', label: '徒步路线' },
+    shuttle: { color: '#4C8A93', width: 3.0, dash: null,  label: '景区区间车／摆渡（导航道路）' },
+    hike:    { color: '#7FA090', width: 3.4, dash: '0.1 7', label: '徒步实录（两步路轨迹）' },
     stub:    { color: '#A8A79E', width: 1.6, dash: '2 6', label: '接驳示意（无公开路网）' },
     schem:   { color: '#A8A79E', width: 2.4, dash: '7 8', label: '走向示意（该路未收录于公开路网）' },
     ctx:     { color: '#E4E3DD', width: 2.0, dash: null },
@@ -101,7 +104,7 @@ window.GeoMap = (function () {
     });
     tracks.forEach(t => {
       /* 这一屏已经画了同一条路的真实路段，就不要再叠一份实录 */
-      if (legs.some(l => l.points && sameCorridor(t.points, l.points))) return;
+      if (legs.some(l => l.points && l.mode === modeOf(t.kind, t.name) && sameCorridor(t.points, l.points))) return;
       const g = (t.adopted_points && t.adopted_points.length) ? t.adopted_points : t.points;
       const m = modeOf(t.kind, t.name);
       if ((t.adopted_points || []).length && t.points && t.points.length > 1)
@@ -141,6 +144,16 @@ window.GeoMap = (function () {
   }
   /* 某方案的全部行程腿：先找真实路网腿 → 再找当天 KML 轨迹 → 都没有才画走向示意 */
 
+  /* 里程口径：优先"实际采用段"；采用段是区间（如"约 3（包络 1.8—3.2）"）时
+     取区间中值，避免把整条 8.81 km 的三湾轨迹当成当天 3 km 的步行量算进去。 */
+  function trackKm(t) {
+    const raw = String((t && t.adopted_km) == null ? '' : t.adopted_km);
+    const nums = (raw.match(/[0-9]+(\.[0-9]+)?/g) || []).map(Number);
+    if (nums.length >= 2) return +((nums[0] + nums[1]) / 2).toFixed(1);
+    if (nums.length === 1) return nums[0];
+    const d = parseFloat(t && t.distance);
+    return isFinite(d) ? d : null;
+  }
   const SPEED = { drive: 40, shuttle: 30, hike: 4 };
   function legLabel(l) {
     if (!l.km) return '';
@@ -165,14 +178,85 @@ window.GeoMap = (function () {
      若用过滤后的列表算图例，点掉一类按钮也会跟着消失，读起来像筛选失效。 */
   /* 方案级过滤：每一天该走哪些路，用当天 places 里出现的点来判定，
      否则三套方案共用同一批"日期腿"，切换按钮时地图不会变。 */
-  function legAllowed(plan, d, l) {
-    if (l.id === 'L1' || l.id === 'L10') return true;
-    const tagged = (window.LEG_TAGS || R.LEG_TAGS) && (window.LEG_TAGS || R.LEG_TAGS)[l.id];
-    if (!tagged) return true;
+  /* 方案级过滤按"这套方案全程会经过的点"判定，而不是按这条腿被烘焙时的日期。
+     教训：L3（贾登峪→布奴阿拉安）在 roads.js 里钉死在 9/27，但备选B 是 9/26 走；
+     按单日判定就会把这条腿整条丢掉——读者看到的就是"切换方案后徒步线不见了"。
+     方案之间点位集合不同，所以按全程集合判定依然能保证"切方案地图真的变"。 */
+  function planPoints(plan) {
     const want = {};
-    ((plan.day_places || {})[d] || []).forEach(id => { want[id] = 1; });
-    /* 起终点的白名单：由 build_roads.py 写入 LEG_TAGS，没有标注就视为通用腿 */
-    return tagged.from.some(id => want[id]) && tagged.to.some(id => want[id]);
+    const dp = (plan && plan.day_places) || {};
+    Object.keys(dp).forEach(did => (dp[did] || []).forEach(id => { want[id] = 1; }));
+    return want;
+  }
+  /* ── 路线归属：每条腿在每套方案里只落到"一天" ────────────────────────
+     判定依据是两端点位有没有同时出现在那一天的行程点里，而不是 roads.js 里
+     烘焙的 l.day。理由：几何生成时的日期只是参考值，同一段路在不同方案里会落在
+     不同天（贾登峪→布奴阿拉安：主方案 9/27、备选B 9/26），按固定日期判定就会丢线。
+     命中多天时优先取和 l.day 一致的那天，其次取最近的一天——保证一条腿只画一次。 */
+  const dayIndexOf = {};
+  Object.keys(DAY_OF).forEach(k => { dayIndexOf[DAY_OF[k]] = k; });
+  function legCandidates(plan, l) {
+    const tagged = (window.LEG_TAGS || R.LEG_TAGS || {})[l.id];
+    const dpAll = (plan && plan.day_places) || {};
+    return Object.keys(dpAll).sort().filter(did => {
+      const want = {};
+      (dpAll[did] || []).forEach(id => { want[id] = 1; });
+      if (!tagged) return l.day === DAY_OF[did];
+      return tagged.from.some(id => want[id]) && tagged.to.some(id => want[id]);
+    });
+  }
+  function assignDay(cands, hintDay) {
+    if (!cands.length) return null;
+    const hint = dayIndexOf[hintDay];
+    if (hint && cands.indexOf(hint) >= 0) return hint;
+    return cands.slice().sort((a, b) => Math.abs(+a - +hint) - Math.abs(+b - +hint))[0];
+  }
+  /* 阿勒泰走廊的两条长腿（L1 去程、L10 返程）单独处理：
+     它们的 LEG_TAGS 端点写的是"阿勒泰市 / 禾木"，但备选B 9/25 只沿阿禾公路到契巴罗衣、
+     不进禾木村——按端点全匹配会判定"这天不走这条路"，整条阿禾公路就从备选B 消失。
+     改用走廊点集：L1 落到最早涉及阿禾走廊的那天，L10 落到最晚涉及返程的那天。 */
+  const CORRIDOR_OUT = ['altay_city', 'back_to_altay', 'ahe_road', 'hemu_village', 'qibaluoyi'];
+  const CORRIDOR_BACK = ['altay_city', 'back_to_altay', 'jiadengyu'];
+  function planLegDays(plan) {
+    const out = {};
+    const dpAll = (plan && plan.day_places) || {};
+    const days = Object.keys(dpAll).sort();
+    const pick = (ids, latest) => {
+      const hit = days.filter(did => (dpAll[did] || []).some(id => ids.indexOf(id) >= 0));
+      return hit.length ? (latest ? hit[hit.length - 1] : hit[0]) : null;
+    };
+    R.legs.forEach(l => {
+      if (l.id === 'L1') { out[l.id] = pick(CORRIDOR_OUT, false); return; }
+      if (l.id === 'L10') { out[l.id] = pick(CORRIDOR_BACK, true); return; }
+      out[l.id] = assignDay(legCandidates(plan, l), l.day);
+    });
+    return out;
+  }
+  /* 实录归属同理：两端锚点同时落在某天的行程点里才算那天走它，
+     命中多天时优先取轨迹自报的日期（"9/29 或 9/30"这类多值会全部作为候选）。 */
+  function trackDays(t) {
+    return String(t.day || '').split(/[^0-9/]+/).filter(x => /^\d+\/\d+$/.test(x))
+      .map(x => dayIndexOf[x]).filter(Boolean);
+  }
+  function planTrackDay(plan, t) {
+    const dpAll = (plan && plan.day_places) || {};
+    const need = TRACK_PLACES[t.id] || [];
+    const days = Object.keys(dpAll).sort();
+    const hasAll = did => need.length && need.every(id => (dpAll[did] || []).indexOf(id) >= 0);
+    const hasSome = did => need.some(id => (dpAll[did] || []).indexOf(id) >= 0);
+    /* 先认"两端都在同一天"的那天：这条轨迹当天的走向不可能跑到别的日子去。
+       之前只看"任一端在"，于是备选B 把 9/26 的布奴阿拉安徒步错画到了 9/27。 */
+    const full = days.filter(hasAll);
+    if (full.length) {
+      const h = trackDays(t).filter(d => full.indexOf(d) >= 0);
+      return h.length ? h[0] : full[0];
+    }
+    /* 端点只命中一端时（如阿禾公路实录只挂 ahe_road），再退回宽松判定，
+       并优先贴合轨迹自报的日期，避免整条轨迹从方案里消失。 */
+    const cands = days.filter(hasSome);
+    const hinted = trackDays(t).filter(d => cands.indexOf(d) >= 0);
+    if (hinted.length) return hinted[0];
+    return cands.length ? cands[0] : null;
   }
   /* ── 实录（KML）该不该出现在这一套方案里 ──────────────────────────
      实录只属于"当天行程点里真的包含它两端"的方案；否则三套方案会共用同一批轨迹，
@@ -191,7 +275,7 @@ window.GeoMap = (function () {
   /* 同走廊判定：实录与真实路段常常是同一条路的两份几何（点数、采样都不同），
      只比端点就会漏，所以判断"两端都贴着这条折线、这条折线两端也贴着实录"。
      命中就说明是一段路的两份画法，只画一份，避免叠成两层线、里程还被算两遍。 */
-  const NEAR_KM = 0.4;
+  const NEAR_KM = 0.2;
   function nearLine(line, p) {
     for (let i = 0; i < line.length; i++) {
       const dy = (line[i][0] - p[0]) * 111.2, dx = (line[i][1] - p[1]) * 73.4;
@@ -206,50 +290,54 @@ window.GeoMap = (function () {
   }
   /* 这一段本身就是"导航线"（tracks 注册表里 is_nav_line），和 roads.js 的 L3
      区间车路段是同一条路：不采用实录，直接由 L3 落笔，避免同路两条线叠着走。 */
-  const TRACK_DROP = { '阿勒泰布尔津县-穿越-贾登峪-布奴阿拉安': 1 };
+  /* 曾经把"贾登峪→布奴阿拉安"徒步实录整条禁用，理由是它和区间车 L3 同路。
+     但那是两件事：L3 是车行接驳段，这条是当天真正要走的 10.68 km 采用段。
+     读者反馈"很多徒步轨迹消失了"就是从这里丢的，所以恢复。 */
+  const TRACK_DROP = {};
   /* 「不采用」的实录任何方案都不画 */
   function trackAllowed(plan, did, t) {
     if (TRACK_DROP[t.id]) return false;
     if (/不采用/.test(String(t.status || ''))) return false;
-    const ids = (plan.day_places || {})[did] || [];
     const need = TRACK_PLACES[t.id];
-    /* 锚点是“这条轨迹的落点属于这一天”：命中任意一个即可（阿禾公路全天都在路上，
-       轨迹终点是禾木，但备选B 只到贾登峪，用单一终点判定会把它整条丢掉）。 */
-    return need ? need.some(id => ids.indexOf(id) >= 0) : false;
+    if (!need) return false;
+    /* 锚点＝这条轨迹两端落在哪几个点上；当天行程点里命中任意一个就算这支队伍当天走它。
+       阿禾公路全天都在路上、轨迹终点是禾木，若只认终点，备选B（到贾登峪不进禾木）会整条丢。 */
+    const ids = (plan.day_places || {})[did] || [];
+    return need.some(id => ids.indexOf(id) >= 0);
   }
   function planLegsRaw(planIds, scope, dayId) {
     const out = [];
     (planIds || []).forEach(planId => {
       const plan = window.TRIP ? TRIP.plans.filter(x => x.id === planId)[0] : null;
       if (!plan || !plan.day_places) return;
-      Object.keys(plan.day_places).sort().forEach(did => {
+      const legDay = planLegDays(plan);
+      /* 真实路网腿：按"这条方案里唯一指派的那一天"落到对应位置 */
+      R.legs.forEach(l => {
+        const did = legDay[l.id];
+        if (!did) return;
         if (dayId && did !== dayId) return;
-        const d = DAY_OF[did];
-        R.legs.forEach(l => {
-          if (l.day !== d) return;
-          if (scope === 'core' && CORRIDOR_LEG[l.id]) return;
-          if (!legAllowed(plan, did, l)) return;
-          out.push({ plan: planId, day: did, dayLabel: l.day, mode: l.mode, src: l.src,
-                     name: l.name, points: l.points, id: l.id, km: l.km });
-        });
-        (window.TRACKS ? TRACKS.tracks : []).forEach(t => {
-          if (!trackAllowed(plan, did, t)) return;
-          /* 同一天已有这份真实路段，就不再叠同一段实录 */
-          /* 与实录同源的 roads.js 路段（src=kml）本身就是这份 KML 重采样出来的，
-            不能拿它当重复依据，否则实录会被自己的副本挤掉。 */
-          if (R.legs.some(l => l.day === d && l.src !== 'kml' && sameCorridor(t.points, l.points))) return;
-          const ad = t.adopted_points && t.adopted_points.length;
-          if (String(t.day || '').indexOf(d) === 0 && t.points && t.points.length > 1
-              && (ad || modeOf(t.kind, t.name) !== 'hike'))
-            out.push({ plan: planId, day: did, dayLabel: d, mode: modeOf(t.kind, t.name), src: 'kml', name: t.name,
-                       points: ad ? t.adopted_points : t.points, id: t.id,
-                       km: (function () {
-                         const k = parseFloat(String(t.adopted_km == null ? '' : t.adopted_km).replace(/[^0-9.]/g, ''));
-                         return isFinite(k) ? k : t.distance;
-                       })(),
-                       gain: t.gain, loss: t.loss, elevation: t.elevation,
-                       adoptedNote: t.adopted_note, fullKm: t.distance });
-        });
+        if (scope === 'core' && CORRIDOR_LEG[l.id]) return;
+        out.push({ plan: planId, day: did, dayLabel: l.day, mode: l.mode, src: l.src,
+                   name: l.name, points: l.points, id: l.id, km: l.km });
+      });
+      /* 实录（KML）：同样只落到唯一指派的那一天 */
+      (window.TRACKS ? TRACKS.tracks : []).forEach(t => {
+        const did = planTrackDay(plan, t);
+        if (!did) return;
+        if (dayId && did !== dayId) return;
+        if (!trackAllowed(plan, did, t)) return;
+        /* 同一天已经有同一走法、同一段路的真实路段，就不再叠一份实录副本——
+           L1（阿禾公路）、L5（白哈巴→喀纳斯）本身就是这两份 KML 的重采样结果，
+           两份都画会在同一条路上叠两层线，看起来像"线画粗了、颜色发脏"。
+           注意只在交通方式一致时才算重复：徒步实录和区间车同走一段路是两回事，都要留。 */
+        if (R.legs.some(l => l.day === DAY_OF[did]
+                          && l.mode === modeOf(t.kind, t.name) && sameCorridor(t.points, l.points))) return;
+        const ad = t.adopted_points && t.adopted_points.length;
+        if (!t.points || t.points.length < 2) return;
+        out.push({ plan: planId, day: did, dayLabel: DAY_OF[did], mode: modeOf(t.kind, t.name), src: 'kml',
+                   name: t.name, points: ad ? t.adopted_points : t.points, id: t.id, km: trackKm(t),
+                   gain: t.gain, loss: t.loss, elevation: t.elevation,
+                   adoptedNote: t.adopted_note, fullKm: t.distance });
       });
     });
     return out;
@@ -266,7 +354,8 @@ window.GeoMap = (function () {
   }
   const visible = p => !(window.HIDE && window.HIDE.stay && p.kind === 'stay');
   return { legsFor: legsFor, planLegs: planLegs, planLegsRaw: planLegsRaw, dayLegs: dayLegs, visible: visible,
-           trackAllowed: trackAllowed, sameCorridor: sameCorridor,
+           trackAllowed: trackAllowed, sameCorridor: sameCorridor, planLegDays: planLegDays,
+           planTrackDay: planTrackDay, trackKm: trackKm,
            legLabel: legLabel, CAMP_IDS: CAMP_IDS, PLAN_COLOR: PLAN_COLOR, PLAN_NAME: PLAN_NAME, pinHTML: pinHTML, drawSVG: drawSVG, labelAttrs: labelAttrs, modeOf: modeOf,
            STYLE: STYLE, raw: R };
 })();

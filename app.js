@@ -185,7 +185,11 @@
         const ttl = el('title', {});
         ttl.textContent = p.name + ' — 打开地点页';
         g.append(ttl);
-        g.addEventListener('click', () => { location.href = 'place.html?id=' + p.id; });
+        g.addEventListener('click', () => {
+          /* 先用浮卡给出浅入口（结论、照片数、关联日期），点卡里的按钮再进地点详情页 */
+          const e = ENG();
+          if (e && e.openDrawer) { e.openDrawer(p); } else { location.href = 'place.html?id=' + p.id; }
+        });
         svg.append(g);
       });
     /* 图例分类按"这一天/这个范围一共有哪些走法"算，和当前开关无关：
@@ -331,8 +335,34 @@
       + '</div><div class="dd-side"><span><i>移动</i>' + esc(d.move) + '</span>'
       + '<span><i>过夜</i>' + esc(sleep) + '</span>'
       + '<span><i>大包</i>' + esc(d.bag || '—') + '</span>'
-      + '<span class="dd-red"><i>红线</i>' + esc(d.redline) + '</span></div></div>';
+      + '<span class="dd-red"><i>红线</i>' + esc(d.redline) + '</span>'
+      + ddPlaces(d) + '</div></div>';
   }
+
+  /* 当日经过的地点：点名字直接在地图上打开那一颗钉的浮卡，不用先去图上找。 */
+  function ddPlaces(d) {
+    const ids = (d.places || []).filter(id => placeById(id)).slice(0, 8);
+    if (!ids.length) return '';
+    return '<span class="dd-jump"><i>当日地点</i><span class="dd-chips">'
+      + ids.map(id => '<button type="button" class="dd-chip" data-place="' + id + '">'
+          + esc(placeById(id).name) + '</button>').join('') + '</span></span>';
+  }
+  document.addEventListener('click', function (e) {
+    const b = e.target.closest && e.target.closest('[data-place]');
+    if (!b) return;
+    const id = b.getAttribute('data-place');
+    if (!id) return;
+    const dayId = sel === 'all' ? null : sel;
+    /* 地图在上方，日程在下方：点了地名先把地图滚进视野，否则浮卡开在看不见的地方 */
+    const stage = document.querySelector('.map-stage');
+    if (stage && stage.getBoundingClientRect().top < 40) {
+      try { stage.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (err) { stage.scrollIntoView(); }
+    }
+    const A = window.TripAMap, L = window.TripLeaf;
+    if (A && A.active && A.focusPlace) { A.focusPlace(id, dayId); return; }
+    if (L && L.ready && L.focusPlace) { L.focusPlace(id, dayId); return; }
+    location.href = 'place.html?id=' + id;
+  });
 
   /* ── 首页各区块 ───────────────────────────────────────────────────── */
 
@@ -447,8 +477,7 @@
         + '<div><i>过夜</i><span>' + esc(stay) + '</span></div></div>'
         + (ps.length ? '<div class="dt-tags">' + ps.map(p => '<span>' + esc(p.name) + '</span>').join('') + '</div>' : '')
         + '<footer><span class="dt-cut">先删：' + esc(d.cut_first || '—') + '</span><em>当日日程 →</em></footer></a>';
-    }).join('') + '</div>'
-      + '<p class="day-note">九天按天排，点任意一天进当日明细：几点的车、走哪条路、住哪、票怎么买都在里面。</p>';
+    }).join('') + '</div>';
   }
 
   /*  费用：六个关键数字 + 按天拆开（和日程同一套日期）───────────────────── */
@@ -465,7 +494,7 @@
       ['装备租赁', '955 元/三人', '目标 ≤1000，阿勒泰租优先'],
       ['住宿上限', '≤600 元/间', '超了就用帐篷兜底'],
       ['餐饮', EST.food_per_person || '800—1000 元/人', '按 100 元/人·天 × 8 天备'],
-      ['预估人均', (EST.per_person || '2800—3400') + ' 元', '吃＋票＋住＋装备＋整车分摊，火车实付另计'],
+      ['预估人均', /元/.test(String(EST.per_person || '')) ? EST.per_person : (EST.per_person || '2800—3400') + ' 元', '吃＋票＋住＋装备＋整车分摊，火车实付另计'],
     ];
     const stay = {};
     (B.variable_stay || []).forEach(x => { if (x && x.night) stay[x.night] = x; });
@@ -557,6 +586,8 @@
   window.__openLeg = function (leg) {
     const host = $('#mapDrawer');
     if (!host || !leg) return;
+    if (window.TripLeaf && TripLeaf.unanchor) TripLeaf.unanchor();
+    host.style.left = '16px'; host.style.top = '16px'; host.style.right = 'auto';
     const d = D.filter(x => x.id === leg.day || x.date === leg.day || x.date === leg.dayLabel)[0];
     const km = leg.km || 0;
     const h = km / (LEG_SPEED[leg.mode] || 40);
