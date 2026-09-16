@@ -72,7 +72,9 @@
     dLat = dLat * 180 / ((A * (1 - EE)) / (m * sq) * PI); dLng = dLng * 180 / (A / sq * Math.cos(radLat) * PI);
     return [lng + dLng, lat + dLat];
   }
-  const toGCJ = pts => (pts || []).map(q => { const g = wgs2gcj(q[1], q[0]); return [g[1], g[0]]; });
+  /* 行程几何存为 [纬度, 经度]；高德覆盖物只接受 [经度, 纬度]。
+     先转 GCJ-02，再原样传出 [lng, lat]，不能沿用 Leaflet 的坐标顺序。 */
+  const toAMap = pts => (pts || []).map(q => wgs2gcj(q[1], q[0]));
   const poiGCJ = p => (p.coord_gcj ? [p.coord_gcj[1], p.coord_gcj[0]]
     : (p.coord && p.coord[0] != null ? wgs2gcj(p.coord[1], p.coord[0]) : null));
 
@@ -103,7 +105,7 @@
       : (l.src === 'schematic' ? COLOR.schem : (COLOR[l.mode] || COLOR.drive));
     const dash = l.src === 'schematic' && !all;
     roadPath(l, pts => {
-      const path = toGCJ(pts);
+      const path = toAMap(pts);
       if (path.length < 2) return;
       const casing = new AMap.Polyline({ map: state.map, path: path, strokeColor: '#ffffff',
         strokeWeight: dash ? 1.5 : 5.2, strokeOpacity: .92, lineJoin: 'round', zIndex: 40 });
